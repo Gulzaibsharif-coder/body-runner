@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>METRO DASH</title>
 
-<!-- MediaPipe -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+<!-- MediaPipe — versions pinned on purpose. The unversioned "@latest" URLs
+     frequently break this legacy Solutions API when Google ships updates,
+     which is the most common cause of tracking silently doing nothing. -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/pose.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js"></script>
 
 <style>
 /* =========================================================
@@ -214,7 +216,62 @@ html,body{
     background:repeating-linear-gradient(90deg,var(--neon-magenta) 0 14px,#1a1a1a 14px 20px);
 }
 
-/* coin — glowing token, not emoji */
+/* obstacle variant: full-lane train — cannot be jumped or ducked */
+.obstacle.train{
+    height:120px;top:-40px;width:70px;
+    background:linear-gradient(180deg,#2f6fb8,#1c4a86);
+    border:3px solid #10305c;
+    border-radius:8px;
+}
+.obstacle.train::before{
+    content:"";position:absolute;top:14px;left:6px;right:6px;height:26px;
+    background:repeating-linear-gradient(90deg,#bfe8ff 0 12px,#1c4a86 12px 18px);
+    border-radius:3px;
+}
+.obstacle.train::after{
+    content:"";position:absolute;bottom:8px;left:8px;right:8px;height:5px;
+    background:var(--warn-yellow);border-radius:2px;
+}
+
+/* power-ups */
+.powerup{
+    position:absolute;z-index:14;width:38px;height:38px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:bold;font-size:16px;color:#0c0f1f;
+    box-shadow:0 0 16px 3px currentColor, 0 5px 6px rgba(0,0,0,.4);
+    animation:powerupPulse .8s infinite ease-in-out;
+}
+.powerup.magnet{ background:radial-gradient(circle at 35% 30%,#c9fff0,#33e6ff 60%,#0b8fa8); color:#083240; }
+.powerup.shield{ background:radial-gradient(circle at 35% 30%,#fff0d6,#ffb03f 60%,#a8620b); color:#3a1f00; }
+@keyframes powerupPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.12);}}
+
+/* active power-up HUD chips */
+#powerupHud{position:absolute;top:70px;left:25px;z-index:35;display:flex;gap:8px;}
+.powerChip{
+    padding:6px 12px;border-radius:20px;font-size:12px;font-weight:bold;color:#0c0f1f;
+    background:var(--warn-yellow);box-shadow:0 4px 12px rgba(0,0,0,.4);
+    display:flex;align-items:center;gap:6px;
+}
+.powerChip.magnetChip{background:var(--neon-cyan);}
+.powerChip.shieldChip{background:var(--signal-orange);color:#fff;}
+
+/* player shield glow */
+#playerWrap.shielded #player{filter:drop-shadow(0 0 10px var(--signal-orange)) drop-shadow(0 0 18px var(--signal-orange));}
+
+/* chase tension — pulses in as speed rises */
+#chaseVignette{
+    position:absolute;inset:0;z-index:5;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 110%, rgba(255,40,40,.35), transparent 60%);
+    opacity:0;transition:opacity .4s ease;
+}
+#chaseVignette.active{animation:chasePulse 1.1s infinite ease-in-out;}
+@keyframes chasePulse{0%,100%{opacity:.15;}50%{opacity:.5;}}
+#chaseLabel{
+    position:absolute;top:120px;left:50%;transform:translateX(-50%);z-index:36;
+    color:var(--neon-magenta);font-weight:800;letter-spacing:2px;font-size:13px;
+    text-shadow:0 0 8px var(--neon-magenta);opacity:0;transition:opacity .4s ease;
+}
+#chaseLabel.active{opacity:1;}
 .coin{
     position:absolute;z-index:14;width:34px;height:34px;border-radius:50%;
     background:radial-gradient(circle at 35% 30%, #fff6c8, var(--warn-yellow) 55%, #b9860a 100%);
@@ -297,11 +354,16 @@ html,body{
         <div class="scoreBox coinBox">● <span id="coins">0</span></div>
     </div>
 
+    <div id="powerupHud"></div>
+    <div id="chaseVignette"></div>
+    <div id="chaseLabel">⚠ INSPECTOR CLOSING IN</div>
+
     <!-- CAMERA -->
     <div id="cameraPanel">
         <div class="cameraTitle"><span>BODY CAM</span><span class="live">● LIVE</span></div>
         <video id="camera" autoplay playsinline></video>
         <div id="status">Camera waiting...</div>
+        <div id="debug" style="padding:4px 2px 0;text-align:center;color:#33e6ff;font-size:11px;line-height:1.5;"></div>
     </div>
 
     <!-- PLAYER -->
@@ -363,10 +425,14 @@ const restartButton = document.getElementById("restartButton");
 const startScreen = document.getElementById("startScreen");
 const gameOverScreen = document.getElementById("gameOver");
 const status = document.getElementById("status");
+const debugEl = document.getElementById("debug");
 const scoreElement = document.getElementById("score");
 const coinsElement = document.getElementById("coins");
 const finalScore = document.getElementById("finalScore");
 const finalCoins = document.getElementById("finalCoins");
+const powerupHud = document.getElementById("powerupHud");
+const chaseVignette = document.getElementById("chaseVignette");
+const chaseLabel = document.getElementById("chaseLabel");
 
 /* =====================================================
    GAME VARIABLES
@@ -379,6 +445,12 @@ let coins = 0;
 let speed = 6;
 let obstacleTimer = 0;
 let coinTimer = 0;
+let powerupTimer = 0;
+
+let magnetActive = false;
+let magnetEndsAt = 0;
+let shieldActive = false;
+let shieldEndsAt = 0;
 
 const lanes = ["39%","50%","61%"];
 
@@ -441,6 +513,7 @@ function startScore(){
         score++;
         if(score % 20 === 0 && speed < 14) speed += .5;
         scoreElement.textContent = String(score).padStart(6,"0");
+        updateChaseTension();
     }, 100);
 }
 
@@ -450,22 +523,28 @@ function startScore(){
 function createObstacle(){
     if(!gameRunning) return;
     const obstacle = document.createElement("div");
-    const isBar = Math.random() < .35;
-    obstacle.className = "obstacle" + (isBar ? " bar" : "");
-    obstacle.dataset.isBar = isBar ? "1" : "0";
+
+    const roll = Math.random();
+    let type;
+    if(roll < .25) type = "bar";
+    else if(roll < .65) type = "crate";
+    else type = "train";
+
+    obstacle.className = "obstacle" + (type !== "crate" ? " " + type : "");
+    obstacle.dataset.type = type;
 
     const obstacleLane = Math.floor(Math.random()*3);
     obstacle.dataset.lane = obstacleLane;
     obstacle.style.left = lanes[obstacleLane];
     obstacle.style.transform = "translateX(-50%)";
-    obstacle.style.top = "-80px";
+    obstacle.style.top = type === "train" ? "-140px" : "-80px";
 
     game.appendChild(obstacle);
-    moveObstacle(obstacle, isBar);
+    moveObstacle(obstacle, type);
 }
 
-function moveObstacle(obstacle, isBar){
-    let position = -80;
+function moveObstacle(obstacle, type){
+    let position = type === "train" ? -140 : -80;
     function frame(){
         if(!gameRunning) return;
         position += speed;
@@ -476,15 +555,20 @@ function moveObstacle(obstacle, isBar){
         const sameLane = Number(obstacle.dataset.lane) === lane;
         const verticalCollision = obstacleRect.bottom > playerRect.top + 20 && obstacleRect.top < playerRect.bottom;
 
-        // bars are avoided by crouching, crates by jumping
-        const avoided = isBar ? isCrouching : isJumping;
+        // trains can only be avoided by switching lanes — jump/crouch don't help
+        const avoided = type === "bar" ? isCrouching : (type === "crate" ? isJumping : false);
 
         if(sameLane && verticalCollision && !avoided){
+            if(shieldActive){
+                consumeShield();
+                obstacle.remove();
+                return;
+            }
             endGame();
             return;
         }
 
-        if(position > window.innerHeight + 100){ obstacle.remove(); return; }
+        if(position > window.innerHeight + 150){ obstacle.remove(); return; }
         requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
@@ -516,9 +600,14 @@ function moveCoin(coin){
         const coinRect = coin.getBoundingClientRect();
         const playerRect = player.getBoundingClientRect();
         const sameLane = Number(coin.dataset.lane) === lane;
-        const collected = coinRect.bottom > playerRect.top && coinRect.top < playerRect.bottom;
+        const nearPlayerVertically = coinRect.bottom > playerRect.top - 40 && coinRect.top < playerRect.bottom + 40;
 
-        if(sameLane && collected){
+        // magnet: any coin near the player's row gets collected regardless of lane
+        const collected = magnetActive
+            ? nearPlayerVertically
+            : (sameLane && coinRect.bottom > playerRect.top && coinRect.top < playerRect.bottom);
+
+        if(collected){
             coins++;
             coinsElement.textContent = coins;
             coin.remove();
@@ -531,14 +620,112 @@ function moveCoin(coin){
 }
 
 /* =====================================================
+   POWER-UPS — magnet (auto-collect coins) & shield (absorb one hit)
+===================================================== */
+function createPowerup(){
+    if(!gameRunning) return;
+    const powerup = document.createElement("div");
+    const kind = Math.random() < .5 ? "magnet" : "shield";
+    powerup.className = "powerup " + kind;
+    powerup.textContent = kind === "magnet" ? "M" : "S";
+    powerup.dataset.kind = kind;
+
+    const puLane = Math.floor(Math.random()*3);
+    powerup.dataset.lane = puLane;
+    powerup.style.left = lanes[puLane];
+    powerup.style.transform = "translateX(-50%)";
+    powerup.style.top = "-50px";
+
+    game.appendChild(powerup);
+    movePowerup(powerup);
+}
+
+function movePowerup(powerup){
+    let position = -50;
+    function frame(){
+        if(!gameRunning) return;
+        position += speed;
+        powerup.style.top = position + "px";
+
+        const puRect = powerup.getBoundingClientRect();
+        const playerRect = player.getBoundingClientRect();
+        const sameLane = Number(powerup.dataset.lane) === lane;
+        const collected = sameLane && puRect.bottom > playerRect.top && puRect.top < playerRect.bottom;
+
+        if(collected){
+            activatePowerup(powerup.dataset.kind);
+            powerup.remove();
+            return;
+        }
+        if(position > window.innerHeight + 100){ powerup.remove(); return; }
+        requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+}
+
+function activatePowerup(kind){
+    const now = performance.now();
+    if(kind === "magnet"){
+        magnetActive = true;
+        magnetEndsAt = now + 6000;
+    } else if(kind === "shield"){
+        shieldActive = true;
+        shieldEndsAt = now + 8000;
+        playerWrap.classList.add("shielded");
+    }
+    refreshPowerupHud();
+}
+
+function consumeShield(){
+    shieldActive = false;
+    shieldEndsAt = 0;
+    playerWrap.classList.remove("shielded");
+    refreshPowerupHud();
+}
+
+function tickPowerups(){
+    const now = performance.now();
+    let changed = false;
+    if(magnetActive && now > magnetEndsAt){ magnetActive = false; changed = true; }
+    if(shieldActive && now > shieldEndsAt){ shieldActive = false; playerWrap.classList.remove("shielded"); changed = true; }
+    if(changed) refreshPowerupHud();
+    else if(magnetActive || shieldActive) refreshPowerupHud(); // keep countdown numbers live
+    if(gameRunning) requestAnimationFrame(tickPowerups);
+}
+
+function refreshPowerupHud(){
+    const now = performance.now();
+    let html = "";
+    if(magnetActive){
+        const secs = Math.max(0, Math.ceil((magnetEndsAt - now)/1000));
+        html += `<div class="powerChip magnetChip">🧲 MAGNET ${secs}s</div>`;
+    }
+    if(shieldActive){
+        const secs = Math.max(0, Math.ceil((shieldEndsAt - now)/1000));
+        html += `<div class="powerChip shieldChip">🛡 SHIELD ${secs}s</div>`;
+    }
+    powerupHud.innerHTML = html;
+}
+
+/* =====================================================
+   CHASE TENSION — visual urgency as speed climbs
+===================================================== */
+function updateChaseTension(){
+    const highSpeed = speed >= 10;
+    chaseVignette.classList.toggle("active", highSpeed);
+    chaseLabel.classList.toggle("active", highSpeed);
+}
+
+/* =====================================================
    SPAWN LOOP
 ===================================================== */
 function spawnLoop(){
     if(!gameRunning) return;
-    obstacleTimer++; coinTimer++;
+    obstacleTimer++; coinTimer++; powerupTimer++;
 
     if(obstacleTimer > Math.max(45, 100 - speed*4)){ createObstacle(); obstacleTimer = 0; }
     if(coinTimer > 55){ createCoin(); coinTimer = 0; }
+    if(powerupTimer > 260){ createPowerup(); powerupTimer = 0; }
 
     requestAnimationFrame(spawnLoop);
 }
@@ -552,7 +739,12 @@ async function startGame(){
 
     gameRunning = true; gameOver = false;
     score = 0; coins = 0; lane = 1; speed = 6;
-    obstacleTimer = 0; coinTimer = 0;
+    obstacleTimer = 0; coinTimer = 0; powerupTimer = 0;
+    magnetActive = false; shieldActive = false;
+    playerWrap.classList.remove("shielded");
+    powerupHud.innerHTML = "";
+    chaseVignette.classList.remove("active");
+    chaseLabel.classList.remove("active");
 
     scoreElement.textContent = "000000";
     coinsElement.textContent = "0";
@@ -575,6 +767,7 @@ async function startGame(){
 
     startScore();
     spawnLoop();
+    tickPowerups();
 }
 
 /* =====================================================
@@ -593,8 +786,8 @@ function endGame(){
    RESTART
 ===================================================== */
 restartButton.addEventListener("click", function(){
-    document.querySelectorAll(".obstacle,.coin").forEach(el => el.remove());
-    playerWrap.classList.remove("jump","crouch");
+    document.querySelectorAll(".obstacle,.coin,.powerup").forEach(el => el.remove());
+    playerWrap.classList.remove("jump","crouch","shielded");
     isJumping = false; isCrouching = false;
     startGame();
 });
@@ -610,15 +803,42 @@ let previousHipY = null;
 let bodyCooldown = 0;
 let jumpCooldown = 0;
 
+let poseFrameCount = 0;
+let poseDetectCount = 0;
+let poseLoadFailed = false;
+
 function startPoseTracking(){
     if(pose) return;
-    pose = new Pose({ locateFile:(file)=> "https://cdn.jsdelivr.net/npm/@mediapipe/pose/" + file });
-    pose.setOptions({ modelComplexity:1, smoothLandmarks:true, enableSegmentation:false, minDetectionConfidence:.55, minTrackingConfidence:.55 });
-    pose.onResults(processPose);
+    try{
+        pose = new Pose({
+            locateFile:(file)=> "https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1675469404/" + file
+        });
+        pose.setOptions({ modelComplexity:1, smoothLandmarks:true, enableSegmentation:false, minDetectionConfidence:.5, minTrackingConfidence:.5 });
+        pose.onResults(processPose);
+    } catch(error){
+        poseLoadFailed = true;
+        console.error("Pose init failed:", error);
+        debugEl.textContent = "Body tracking failed to load — check console / internet connection.";
+        return;
+    }
 
     async function processFrame(){
         if(cameraVideo.readyState >= 2){
-            try{ await pose.send({ image: cameraVideo }); } catch(error){ console.log("Pose:", error); }
+            poseFrameCount++;
+            try{
+                await pose.send({ image: cameraVideo });
+            } catch(error){
+                console.error("Pose send failed:", error);
+                debugEl.textContent = "Body tracking error — see console.";
+                poseLoadFailed = true;
+            }
+        }
+        // Report status every ~15 frames so it's readable, not flickering
+        if(poseFrameCount % 15 === 0 && !poseLoadFailed){
+            debugEl.textContent = poseDetectCount > 0
+                ? "Body: tracking ✅  (stand back so shoulders+hips are visible)"
+                : "Body: no person detected — step back / add more light";
+            poseDetectCount = 0;
         }
         if(gameRunning) requestAnimationFrame(processFrame);
     }
@@ -626,7 +846,8 @@ function startPoseTracking(){
 }
 
 function processPose(results){
-    if(!results.poseLandmarks) return;
+    if(!results.poseLandmarks){ return; }
+    poseDetectCount++;
     const landmarks = results.poseLandmarks;
     const leftShoulder = landmarks[11];
     const rightShoulder = landmarks[12];
@@ -639,8 +860,8 @@ function processPose(results){
     if(previousBodyX !== null && bodyCooldown <= 0){
         const movement = bodyX - previousBodyX;
         // mirrored camera, threshold inverted
-        if(movement < -.045){ moveRight(); bodyCooldown = 12; }
-        else if(movement > .045){ moveLeft(); bodyCooldown = 12; }
+        if(movement < -.035){ moveRight(); bodyCooldown = 10; }
+        else if(movement > .035){ moveLeft(); bodyCooldown = 10; }
     }
     if(bodyCooldown > 0) bodyCooldown--;
     previousBodyX = bodyX;
@@ -649,12 +870,12 @@ function processPose(results){
 
     if(previousHipY !== null && jumpCooldown <= 0){
         const verticalMovement = previousHipY - hipY;
-        if(verticalMovement > .035){ jump(); jumpCooldown = 20; }
+        if(verticalMovement > .028){ jump(); jumpCooldown = 18; }
     }
 
-    if(previousHipY !== undefined && !isJumping){
+    if(previousHipY !== null && !isJumping && !isCrouching){
         const downMovement = hipY - previousHipY;
-        if(downMovement > .025) crouch();
+        if(downMovement > .02) crouch();
     }
 
     if(jumpCooldown > 0) jumpCooldown--;
@@ -669,15 +890,39 @@ let previousHandX = null;
 let handCooldown = 0;
 let handJumpCooldown = 0;
 
+let handFrameCount = 0;
+let handDetectCount = 0;
+let handLoadFailed = false;
+
 function startHandTracking(){
     if(hands) return;
-    hands = new Hands({ locateFile:(file)=> "https://cdn.jsdelivr.net/npm/@mediapipe/hands/" + file });
-    hands.setOptions({ maxNumHands:2, modelComplexity:1, minDetectionConfidence:.55, minTrackingConfidence:.55 });
-    hands.onResults(processHands);
+    try{
+        hands = new Hands({
+            locateFile:(file)=> "https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/" + file
+        });
+        hands.setOptions({ maxNumHands:2, modelComplexity:1, minDetectionConfidence:.5, minTrackingConfidence:.5 });
+        hands.onResults(processHands);
+    } catch(error){
+        handLoadFailed = true;
+        console.error("Hands init failed:", error);
+        return;
+    }
 
     async function processHandFrame(){
         if(cameraVideo.readyState >= 2){
-            try{ await hands.send({ image: cameraVideo }); } catch(error){ console.log("Hands:", error); }
+            handFrameCount++;
+            try{
+                await hands.send({ image: cameraVideo });
+            } catch(error){
+                console.error("Hands send failed:", error);
+                handLoadFailed = true;
+            }
+        }
+        if(handFrameCount % 15 === 0 && !handLoadFailed){
+            const handMsg = handDetectCount > 0 ? "Hands: tracking ✅" : "Hands: none visible";
+            const bodyMsg = debugEl.textContent.split("  |  ")[0] || "";
+            debugEl.textContent = bodyMsg + "  |  " + handMsg;
+            handDetectCount = 0;
         }
         if(gameRunning) requestAnimationFrame(processHandFrame);
     }
@@ -686,6 +931,7 @@ function startHandTracking(){
 
 function processHands(results){
     if(!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) return;
+    handDetectCount++;
     const hand = results.multiHandLandmarks[0];
     const wrist = hand[0];
     const indexFinger = hand[8];
@@ -695,15 +941,15 @@ function processHands(results){
 
     if(previousHandX !== null && handCooldown <= 0){
         const movement = handX - previousHandX;
-        if(movement < -.07){ moveRight(); handCooldown = 14; }
-        else if(movement > .07){ moveLeft(); handCooldown = 14; }
+        if(movement < -.055){ moveRight(); handCooldown = 12; }
+        else if(movement > .055){ moveLeft(); handCooldown = 12; }
     }
     if(handCooldown > 0) handCooldown--;
     previousHandX = handX;
 
-    if(wrist.y < .22 && handJumpCooldown <= 0){
+    if(wrist.y < .28 && handJumpCooldown <= 0){
         jump();
-        handJumpCooldown = 25;
+        handJumpCooldown = 22;
     }
     if(handJumpCooldown > 0) handJumpCooldown--;
 }
