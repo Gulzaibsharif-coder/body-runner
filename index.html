@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Body Runner</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: #111;
+            color: white;
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 20px 0 5px;
+        }
+
+        p {
+            margin: 5px 0 20px;
+            color: #ccc;
+        }
+
+        #camera {
+            width: 640px;
+            max-width: 95%;
+            border-radius: 15px;
+            transform: scaleX(-1);
+        }
+
+        #game {
+            width: 640px;
+            max-width: 95%;
+            height: 360px;
+            margin: 20px auto;
+            background: linear-gradient(#5ec8ff, #dff6ff);
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #player {
+            position: absolute;
+            bottom: 45px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 70px;
+        }
+
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 45px;
+            background: #333;
+        }
+
+        #startButton {
+            padding: 14px 28px;
+            font-size: 18px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background: white;
+            color: black;
+        }
+
+        #status {
+            margin: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🏃 BODY RUNNER</h1>
+
+    <p>Control the runner with your body</p>
+
+    <button id="startButton">Start Camera</button>
+
+    <div id="status">
+        Camera not started
+    </div>
+
+    <video id="camera" autoplay playsinline></video>
+
+    <div id="game">
+
+        <div id="player">🏃</div>
+
+        <div id="ground"></div>
+
+    </div>
+
+    <script>
+
+        const camera = document.getElementById("camera");
+        const startButton = document.getElementById("startButton");
+        const status = document.getElementById("status");
+
+        startButton.addEventListener("click", async () => {
+
+            try {
+
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: false
+                });
+
+                camera.srcObject = stream;
+
+                status.textContent = "Camera is working! 🎥";
+
+            } catch (error) {
+
+                status.textContent =
+                    "Camera permission was denied or unavailable.";
+
+                console.error(error);
+            }
+
+        });
+
+    </script>
+
+</body>
+</html>
