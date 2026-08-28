@@ -105,7 +105,7 @@ html,body{
 /* =========================================================
    HEADER / SCORE / CAMERA (kept mostly as-is, restyled)
 ========================================================= */
-#header{position:absolute;top:15px;left:25px;z-index:30;color:#fff;text-shadow:0 3px 10px rgba(0,0,0,.6);}
+#header{position:absolute;top:15px;right:25px;left:auto;z-index:30;color:#fff;text-shadow:0 3px 10px rgba(0,0,0,.6);text-align:right;}
 #header h1{margin:0;font-size:36px;letter-spacing:3px;font-weight:800;
     background:linear-gradient(90deg,var(--warn-yellow),var(--signal-orange));
     -webkit-background-clip:text;background-clip:text;color:transparent;}
@@ -115,11 +115,30 @@ html,body{
 .scoreBox{padding:11px 20px;background:var(--panel-bg);border:1px solid rgba(51,230,255,.25);border-radius:14px;font-size:18px;font-weight:bold;box-shadow:0 8px 25px rgba(0,0,0,.4);}
 .scoreBox.coinBox{color:var(--warn-yellow);}
 
-#cameraPanel{position:absolute;top:15px;right:15px;width:300px;padding:10px;z-index:100;background:var(--panel-bg);border:1px solid rgba(51,230,255,.25);border-radius:18px;box-shadow:0 15px 45px rgba(0,0,0,.5);}
+#cameraPanel{
+    position:absolute;top:15px;left:15px;right:auto;width:270px;
+    padding:12px;z-index:100;background:var(--panel-bg);
+    border:1px solid rgba(51,230,255,.25);border-radius:18px;
+    box-shadow:0 15px 45px rgba(0,0,0,.5);
+}
 .cameraTitle{display:flex;justify-content:space-between;align-items:center;padding:3px 7px 8px;color:#fff;font-size:13px;font-weight:bold;letter-spacing:1px;}
 .live{color:var(--neon-cyan);}
-#camera{width:100%;height:165px;display:block;object-fit:cover;border-radius:12px;transform:scaleX(-1);background:black;}
+#cameraFrame{position:relative;width:100%;height:280px;border-radius:14px;overflow:hidden;}
+#camera{width:100%;height:100%;display:block;object-fit:cover;transform:scaleX(-1);background:black;}
+
+/* "stand here" body outline guide, shown until we detect a good pose */
+#standGuide{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    pointer-events:none;transition:opacity .4s ease;
+}
+#standGuide svg{width:60%;height:90%;opacity:.55;}
+#standGuide.hidden{opacity:0;}
+#standGuideLabel{
+    position:absolute;bottom:8px;left:0;right:0;text-align:center;
+    color:var(--warn-yellow);font-size:12px;font-weight:bold;text-shadow:0 2px 4px rgba(0,0,0,.7);
+}
 #status{padding:7px 2px 2px;text-align:center;color:#9fb0d8;font-size:12px;line-height:1.4;}
+#debug{padding:4px 2px 0;text-align:center;color:#33e6ff;font-size:11px;line-height:1.5;}
 
 /* =========================================================
    PLAYER — original human sprite (not emoji, not a known IP)
@@ -311,13 +330,30 @@ html,body{
 }
 #startButton:hover,#restartButton:hover{transform:scale(1.04);}
 
+/* stretch break panel — reuses the same card look */
+#stretchBreak{
+    display:none;position:absolute;z-index:210;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:460px;max-width:85vw;padding:34px;text-align:center;color:#fff;
+    background:var(--panel-bg);border:1px solid rgba(255,210,63,.35);
+    border-radius:26px;box-shadow:0 25px 70px rgba(0,0,0,.6);
+}
+#stretchBreak h2{margin:0 0 10px;font-size:32px;color:var(--warn-yellow);}
+#stretchBreak p{color:#dbe2f5;font-size:16px;line-height:1.5;}
+#stretchContinueButton{
+    border:none;padding:14px 30px;border-radius:12px;
+    background:linear-gradient(90deg,var(--warn-yellow),var(--signal-orange));
+    color:#1a1200;font-size:16px;font-weight:bold;cursor:pointer;margin-top:8px;
+}
+#stretchContinueButton:hover{transform:scale(1.04);}
+
 @media(max-width:800px){
-    #header h1{font-size:24px;}
-    #header p{font-size:11px;}
-    #cameraPanel{width:200px;top:10px;right:10px;}
-    #camera{height:110px;}
-    #scorePanel{top:82px;font-size:12px;}
-    .scoreBox{padding:7px 12px;}
+    #header{font-size:11px;}
+    #header h1{font-size:22px;}
+    #header p{font-size:10px;}
+    #cameraPanel{width:170px;top:10px;left:10px;padding:8px;}
+    #cameraFrame{height:180px;}
+    #scorePanel{top:16px;font-size:11px;left:60%;}
+    .scoreBox{padding:6px 10px;}
     #player{transform:scale(.75);}
     #controls{width:94%;justify-content:center;flex-wrap:wrap;gap:8px;font-size:10px;}
 }
@@ -356,14 +392,27 @@ html,body{
 
     <div id="powerupHud"></div>
     <div id="chaseVignette"></div>
-    <div id="chaseLabel">⚠ INSPECTOR CLOSING IN</div>
+    <div id="chaseLabel">⚡ SPEEDING UP — STAY SHARP!</div>
 
-    <!-- CAMERA -->
+    <!-- CAMERA (docked left, larger for kids to see themselves clearly) -->
     <div id="cameraPanel">
-        <div class="cameraTitle"><span>BODY CAM</span><span class="live">● LIVE</span></div>
-        <video id="camera" autoplay playsinline></video>
+        <div class="cameraTitle"><span>STAND-HERE CAMERA</span><span class="live">● LIVE</span></div>
+        <div id="cameraFrame">
+            <video id="camera" autoplay playsinline></video>
+            <div id="standGuide">
+                <svg viewBox="0 0 100 200" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="50" cy="24" r="16" fill="none" stroke="#ffd23f" stroke-width="3" stroke-dasharray="6 5"/>
+                    <line x1="50" y1="40" x2="50" y2="120" stroke="#ffd23f" stroke-width="3" stroke-dasharray="6 5"/>
+                    <line x1="50" y1="55" x2="10" y2="95" stroke="#ffd23f" stroke-width="3" stroke-dasharray="6 5"/>
+                    <line x1="50" y1="55" x2="90" y2="95" stroke="#ffd23f" stroke-width="3" stroke-dasharray="6 5"/>
+                    <line x1="50" y1="120" x2="18" y2="190" stroke="#ffd23f" stroke-width="3" stroke-dasharray="6 5"/>
+                    <line x1="50" y1="120" x2="82" y2="190" stroke="#ffd23f" stroke-width="3" stroke-dasharray="6 5"/>
+                </svg>
+                <div id="standGuideLabel">Step back until you fit in the outline 🙂</div>
+            </div>
+        </div>
         <div id="status">Camera waiting...</div>
-        <div id="debug" style="padding:4px 2px 0;text-align:center;color:#33e6ff;font-size:11px;line-height:1.5;"></div>
+        <div id="debug"></div>
     </div>
 
     <!-- PLAYER -->
@@ -410,6 +459,13 @@ html,body{
         <button id="restartButton">RUN AGAIN 🔄</button>
     </div>
 
+    <!-- STRETCH BREAK — brief pause for real-world movement -->
+    <div id="stretchBreak">
+        <h2 id="stretchTitle">🌟 Stretch Break!</h2>
+        <p id="stretchText">Reach both hands up high, then touch your toes — 5 times!</p>
+        <button id="stretchContinueButton">I'M READY — CONTINUE ▶</button>
+    </div>
+
 </div>
 
 <script>
@@ -433,12 +489,16 @@ const finalCoins = document.getElementById("finalCoins");
 const powerupHud = document.getElementById("powerupHud");
 const chaseVignette = document.getElementById("chaseVignette");
 const chaseLabel = document.getElementById("chaseLabel");
+const standGuide = document.getElementById("standGuide");
+const stretchBreak = document.getElementById("stretchBreak");
+const stretchContinueButton = document.getElementById("stretchContinueButton");
 
 /* =====================================================
    GAME VARIABLES
 ===================================================== */
 let gameRunning = false;
 let gameOver = false;
+let paused = false;
 let lane = 1;
 let score = 0;
 let coins = 0;
@@ -452,6 +512,9 @@ let magnetEndsAt = 0;
 let shieldActive = false;
 let shieldEndsAt = 0;
 
+let nextStretchScore = 400; // first stretch break at score 400, then every 500
+let onStretchBreak = false;
+
 const lanes = ["39%","50%","61%"];
 
 /* =====================================================
@@ -462,11 +525,11 @@ function updatePlayerPosition(){
 }
 
 function moveLeft(){
-    if(!gameRunning) return;
+    if(!gameRunning || paused) return;
     if(lane>0){ lane--; updatePlayerPosition(); }
 }
 function moveRight(){
-    if(!gameRunning) return;
+    if(!gameRunning || paused) return;
     if(lane<2){ lane++; updatePlayerPosition(); }
 }
 
@@ -475,7 +538,7 @@ function moveRight(){
 ===================================================== */
 let isJumping = false;
 function jump(){
-    if(!gameRunning || isJumping) return;
+    if(!gameRunning || paused || isJumping) return;
     isJumping = true;
     playerWrap.classList.add("jump");
     setTimeout(()=>{ playerWrap.classList.remove("jump"); isJumping = false; }, 700);
@@ -486,7 +549,7 @@ function jump(){
 ===================================================== */
 let isCrouching = false;
 function crouch(){
-    if(!gameRunning || isJumping || isCrouching) return;
+    if(!gameRunning || paused || isJumping || isCrouching) return;
     isCrouching = true;
     playerWrap.classList.add("crouch");
     setTimeout(()=>{ playerWrap.classList.remove("crouch"); isCrouching = false; }, 700);
@@ -509,13 +572,34 @@ let scoreInterval;
 function startScore(){
     clearInterval(scoreInterval);
     scoreInterval = setInterval(()=>{
-        if(!gameRunning) return;
+        if(!gameRunning || paused) return;
         score++;
         if(score % 20 === 0 && speed < 14) speed += .5;
         scoreElement.textContent = String(score).padStart(6,"0");
         updateChaseTension();
+
+        if(score >= nextStretchScore) triggerStretchBreak();
     }, 100);
 }
+
+function triggerStretchBreak(){
+    if(paused) return;
+    paused = true;
+    const prompts = [
+        "Reach both hands up high, then touch your toes — 5 times!",
+        "March in place and swing your arms for 10 seconds!",
+        "Do 5 big star jumps!",
+        "Twist side to side — reach for the sky, then the floor!"
+    ];
+    document.getElementById("stretchText").textContent = prompts[Math.floor(Math.random()*prompts.length)];
+    stretchBreak.style.display = "block";
+    nextStretchScore += 500;
+}
+
+stretchContinueButton.addEventListener("click", function(){
+    stretchBreak.style.display = "none";
+    paused = false;
+});
 
 /* =====================================================
    OBSTACLE CREATION (crate or low bar)
@@ -547,6 +631,7 @@ function moveObstacle(obstacle, type){
     let position = type === "train" ? -140 : -80;
     function frame(){
         if(!gameRunning) return;
+        if(paused){ requestAnimationFrame(frame); return; }
         position += speed;
         obstacle.style.top = position + "px";
 
@@ -594,6 +679,7 @@ function moveCoin(coin){
     let position = -60;
     function frame(){
         if(!gameRunning) return;
+        if(paused){ requestAnimationFrame(frame); return; }
         position += speed;
         coin.style.top = position + "px";
 
@@ -644,6 +730,7 @@ function movePowerup(powerup){
     let position = -50;
     function frame(){
         if(!gameRunning) return;
+        if(paused){ requestAnimationFrame(frame); return; }
         position += speed;
         powerup.style.top = position + "px";
 
@@ -721,6 +808,7 @@ function updateChaseTension(){
 ===================================================== */
 function spawnLoop(){
     if(!gameRunning) return;
+    if(paused){ requestAnimationFrame(spawnLoop); return; }
     obstacleTimer++; coinTimer++; powerupTimer++;
 
     if(obstacleTimer > Math.max(45, 100 - speed*4)){ createObstacle(); obstacleTimer = 0; }
@@ -737,10 +825,12 @@ async function startGame(){
     startScreen.style.display = "none";
     gameOverScreen.style.display = "none";
 
-    gameRunning = true; gameOver = false;
+    gameRunning = true; gameOver = false; paused = false;
     score = 0; coins = 0; lane = 1; speed = 6;
     obstacleTimer = 0; coinTimer = 0; powerupTimer = 0;
     magnetActive = false; shieldActive = false;
+    nextStretchScore = 400;
+    stretchBreak.style.display = "none";
     playerWrap.classList.remove("shielded");
     powerupHud.innerHTML = "";
     chaseVignette.classList.remove("active");
@@ -749,6 +839,7 @@ async function startGame(){
     scoreElement.textContent = "000000";
     coinsElement.textContent = "0";
     updatePlayerPosition();
+    standGuide.classList.remove("hidden");
 
     try{
         status.textContent = "Starting camera...";
@@ -848,6 +939,7 @@ function startPoseTracking(){
 function processPose(results){
     if(!results.poseLandmarks){ return; }
     poseDetectCount++;
+    standGuide.classList.add("hidden");
     const landmarks = results.poseLandmarks;
     const leftShoulder = landmarks[11];
     const rightShoulder = landmarks[12];
