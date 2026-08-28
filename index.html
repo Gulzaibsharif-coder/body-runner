@@ -1,240 +1,458 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>BODY RUNNER — Motion Game</title>
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
+<title>BODY RUNNER</title>
+
+<!-- MediaPipe -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
 
 <style>
 
-*{
-    box-sizing:border-box;
+/* =========================
+   BASIC
+========================= */
+
+* {
+    box-sizing: border-box;
 }
 
-html,body{
-    margin:0;
-    padding:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    font-family:Arial,Helvetica,sans-serif;
-    background:#07111f;
+html,
+body {
+    margin: 0;
+    padding: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: #07111f;
 }
 
-/* GAME */
+/* =========================
+   GAME WORLD
+========================= */
 
-#game{
-    position:relative;
-    width:100vw;
-    height:100vh;
-    overflow:hidden;
+#game {
+
+    position: relative;
+
+    width: 100vw;
+    height: 100vh;
+
+    overflow: hidden;
+
     background:
         linear-gradient(
             to bottom,
-            #55c8ef 0%,
-            #9be4f6 34%,
-            #78b65d 35%,
-            #4f9149 100%
+            #4fc3ea 0%,
+            #9ce5f7 38%,
+            #73b55c 39%,
+            #4f9148 100%
         );
 }
 
-/* SUN */
+/* =========================
+   SUN
+========================= */
 
-.sun{
-    position:absolute;
-    width:150px;
-    height:150px;
-    border-radius:50%;
-    background:#ffe98a;
-    right:12%;
-    top:8%;
-    box-shadow:0 0 60px rgba(255,230,100,.8);
+.sun {
+
+    position: absolute;
+
+    width: 150px;
+    height: 150px;
+
+    right: 12%;
+    top: 9%;
+
+    border-radius: 50%;
+
+    background: #ffe783;
+
+    box-shadow:
+        0 0 70px rgba(255, 230, 100, .8);
 }
 
-/* CLOUDS */
+/* =========================
+   CLOUDS
+========================= */
 
-.cloud{
-    position:absolute;
-    width:150px;
-    height:45px;
-    border-radius:50px;
-    background:rgba(255,255,255,.8);
+.cloud {
+
+    position: absolute;
+
+    width: 150px;
+    height: 45px;
+
+    background: rgba(255,255,255,.85);
+
+    border-radius: 50px;
 }
 
-.cloud:before,
-.cloud:after{
-    content:"";
-    position:absolute;
-    background:white;
-    border-radius:50%;
+.cloud::before {
+
+    content: "";
+
+    position: absolute;
+
+    width: 70px;
+    height: 70px;
+
+    left: 20px;
+    top: -35px;
+
+    border-radius: 50%;
+
+    background: white;
 }
 
-.cloud:before{
-    width:70px;
-    height:70px;
-    left:20px;
-    top:-35px;
+.cloud::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 80px;
+    height: 80px;
+
+    right: 15px;
+    top: -40px;
+
+    border-radius: 50%;
+
+    background: white;
 }
 
-.cloud:after{
-    width:80px;
-    height:80px;
-    right:15px;
-    top:-40px;
+.cloud1 {
+
+    left: 10%;
+    top: 16%;
 }
 
-.cloud1{
-    top:12%;
-    left:10%;
+.cloud2 {
+
+    right: 28%;
+    top: 22%;
+
+    transform: scale(.7);
 }
 
-.cloud2{
-    top:18%;
-    right:25%;
-    transform:scale(.7);
-}
+/* =========================
+   ROAD
+========================= */
 
-/* ROAD */
+#road {
 
-#road{
-    position:absolute;
-    bottom:-5%;
-    left:50%;
-    transform:translateX(-50%);
+    position: absolute;
 
-    width:72%;
-    height:78%;
+    width: 70%;
+    height: 78%;
+
+    bottom: -2%;
+    left: 50%;
+
+    transform:
+        translateX(-50%);
 
     background:
         linear-gradient(
             90deg,
-            #222b37 0%,
-            #17202c 50%,
-            #222b37 100%
+            #252e39,
+            #141c28 50%,
+            #252e39
         );
 
-    clip-path:polygon(
-        38% 0,
-        62% 0,
-        100% 100%,
-        0 100%
-    );
-
-    box-shadow:
-        0 -20px 40px rgba(0,0,0,.2);
+    clip-path:
+        polygon(
+            37% 0,
+            63% 0,
+            100% 100%,
+            0 100%
+        );
 }
 
-/* ROAD LANES */
+/* Road edges */
 
-.lane{
-    position:absolute;
-    bottom:0;
-    width:8px;
-    height:100%;
-    background:#7c8791;
-    opacity:.8;
+.roadEdge {
+
+    position: absolute;
+
+    width: 7px;
+    height: 100%;
+
+    background: white;
+
+    opacity: .9;
 }
 
-.lane.left{
-    left:42%;
+.roadEdge.left {
+
+    left: 24%;
 }
 
-.lane.right{
-    right:42%;
+.roadEdge.right {
+
+    right: 24%;
 }
 
-/* ROAD CENTER DASHES */
+/* Lane lines */
 
-.centerLine{
-    position:absolute;
-    left:50%;
-    transform:translateX(-50%);
-    width:8px;
-    height:70px;
-    background:#fff;
-    opacity:.8;
-    animation:roadMove .8s linear infinite;
+.laneLine {
+
+    position: absolute;
+
+    width: 7px;
+    height: 100%;
+
+    background: #87909a;
+
+    opacity: .8;
 }
 
-@keyframes roadMove{
+.laneLine.left {
 
-    from{
-        top:-100px;
-    }
-
-    to{
-        top:100%;
-    }
-
+    left: 42%;
 }
 
-/* GAME HEADER */
+.laneLine.right {
 
-#header{
-    position:absolute;
-    top:20px;
-    left:25px;
-    z-index:20;
-
-    color:white;
-    text-shadow:0 3px 8px rgba(0,0,0,.5);
+    right: 42%;
 }
 
-#header h1{
-    margin:0;
-    font-size:42px;
-    letter-spacing:2px;
-}
+/* =========================
+   ROAD MOVEMENT
+========================= */
 
-#header p{
-    margin:5px 0;
-    font-size:17px;
-}
+.roadDash {
 
-/* SCORE */
+    position: absolute;
 
-#scoreBox{
+    left: 50%;
 
-    position:absolute;
-    top:25px;
-    left:50%;
-    transform:translateX(-50%);
-
-    z-index:30;
-
-    background:rgba(4,12,25,.85);
-    color:white;
-
-    padding:12px 28px;
-    border-radius:18px;
-
-    font-size:21px;
-    font-weight:bold;
-
-    box-shadow:0 8px 25px rgba(0,0,0,.25);
-}
-
-/* PLAYER */
-
-#player{
-
-    position:absolute;
-
-    left:50%;
-    bottom:20%;
+    width: 8px;
+    height: 80px;
 
     transform:
-        translateX(-50%)
-        scale(1);
+        translateX(-50%);
 
-    font-size:95px;
+    background: white;
 
-    z-index:10;
+    opacity: .8;
+
+    animation:
+        roadAnimation .7s linear infinite;
+}
+
+.roadDash:nth-child(2) {
+
+    animation-delay: .35s;
+}
+
+@keyframes roadAnimation {
+
+    0% {
+
+        top: -100px;
+
+    }
+
+    100% {
+
+        top: 100%;
+
+    }
+}
+
+/* =========================
+   HEADER
+========================= */
+
+#header {
+
+    position: absolute;
+
+    top: 15px;
+    left: 25px;
+
+    z-index: 30;
+
+    color: white;
+
+    text-shadow:
+        0 3px 8px rgba(0,0,0,.5);
+}
+
+#header h1 {
+
+    margin: 0;
+
+    font-size: 38px;
+
+    letter-spacing: 2px;
+}
+
+#header p {
+
+    margin: 5px 0;
+
+    font-size: 16px;
+}
+
+/* =========================
+   SCORE
+========================= */
+
+#scorePanel {
+
+    position: absolute;
+
+    top: 18px;
+    left: 50%;
+
+    transform:
+        translateX(-50%);
+
+    z-index: 40;
+
+    display: flex;
+
+    gap: 12px;
+
+    color: white;
+}
+
+.scoreBox {
+
+    padding:
+        12px 20px;
+
+    background:
+        rgba(5,13,26,.9);
+
+    border-radius: 15px;
+
+    font-size: 19px;
+
+    font-weight: bold;
+
+    box-shadow:
+        0 8px 25px rgba(0,0,0,.3);
+}
+
+/* =========================
+   CAMERA
+========================= */
+
+#cameraPanel {
+
+    position: absolute;
+
+    top: 15px;
+    right: 15px;
+
+    width: 310px;
+
+    padding: 10px;
+
+    z-index: 100;
+
+    background:
+        rgba(4,12,24,.96);
+
+    border-radius: 20px;
+
+    box-shadow:
+        0 15px 45px rgba(0,0,0,.4);
+}
+
+.cameraTitle {
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    align-items: center;
+
+    padding:
+        3px 7px 8px;
+
+    color: white;
+
+    font-size: 14px;
+
+    font-weight: bold;
+}
+
+.live {
+
+    color: #43ff86;
+}
+
+#camera {
+
+    width: 100%;
+
+    height: 170px;
+
+    display: block;
+
+    object-fit: cover;
+
+    border-radius: 14px;
+
+    transform:
+        scaleX(-1);
+
+    background: black;
+}
+
+#status {
+
+    padding:
+        7px 2px 2px;
+
+    text-align: center;
+
+    color: #c8d5e5;
+
+    font-size: 13px;
+
+    line-height: 1.4;
+}
+
+/* =========================
+   PLAYER
+========================= */
+
+#player {
+
+    position: absolute;
+
+    left: 50%;
+    bottom: 19%;
+
+    transform:
+        translateX(-50%);
+
+    z-index: 20;
+
+    font-size: 90px;
 
     transition:
         left .12s ease,
@@ -242,293 +460,398 @@ html,body{
         transform .12s ease;
 
     filter:
-        drop-shadow(0 10px 5px rgba(0,0,0,.4));
+        drop-shadow(
+            0 10px 5px
+            rgba(0,0,0,.4)
+        );
 }
 
-/* PLAYER JUMP */
+/* Running animation */
 
-#player.jump{
+#player.running {
 
-    bottom:42%;
+    animation:
+        playerRun .25s infinite alternate;
+}
+
+@keyframes playerRun {
+
+    from {
+
+        transform:
+            translateX(-50%)
+            translateY(0);
+
+    }
+
+    to {
+
+        transform:
+            translateX(-50%)
+            translateY(-5px);
+
+    }
+}
+
+/* Jump */
+
+#player.jump {
+
+    bottom: 43%;
 
     transform:
         translateX(-50%)
-        scale(1.08)
+        scale(1.1)
         rotate(-5deg);
-
 }
 
-/* PLAYER CROUCH */
+/* Crouch */
 
-#player.crouch{
+#player.crouch {
 
-    bottom:18%;
+    bottom: 18%;
 
     transform:
         translateX(-50%)
-        scale(.75, .55);
-
+        scale(.75,.55);
 }
 
-/* CAMERA PANEL */
+/* =========================
+   OBJECTS
+========================= */
 
-#cameraPanel{
+.obstacle {
 
-    position:absolute;
+    position: absolute;
 
-    top:18px;
-    right:18px;
+    width: 70px;
+    height: 55px;
 
-    width:330px;
+    z-index: 15;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    font-size: 48px;
+
+    filter:
+        drop-shadow(
+            0 7px 5px
+            rgba(0,0,0,.35)
+        );
+}
+
+.coin {
+
+    position: absolute;
+
+    z-index: 14;
+
+    font-size: 42px;
+
+    filter:
+        drop-shadow(
+            0 5px 5px
+            rgba(0,0,0,.35)
+        );
+
+    animation:
+        coinSpin .6s infinite linear;
+}
+
+@keyframes coinSpin {
+
+    0% {
+
+        transform:
+            scaleX(1);
+
+    }
+
+    50% {
+
+        transform:
+            scaleX(.35);
+
+    }
+
+    100% {
+
+        transform:
+            scaleX(1);
+
+    }
+}
+
+/* =========================
+   CONTROLS
+========================= */
+
+#controls {
+
+    position: absolute;
+
+    left: 50%;
+    bottom: 18px;
+
+    transform:
+        translateX(-50%);
+
+    z-index: 50;
+
+    display: flex;
+
+    gap: 15px;
+
+    padding:
+        13px 20px;
+
+    border-radius: 17px;
 
     background:
-        rgba(4,12,24,.95);
+        rgba(5,13,26,.92);
+
+    color: white;
+
+    font-size: 14px;
+
+    box-shadow:
+        0 10px 30px rgba(0,0,0,.35);
+}
+
+.control {
+
+    white-space: nowrap;
+}
+
+/* =========================
+   START SCREEN
+========================= */
+
+#startScreen {
+
+    position: absolute;
+
+    z-index: 200;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%,-50%);
+
+    width: 570px;
+
+    max-width: 82vw;
+
+    padding: 35px;
+
+    text-align: center;
+
+    color: white;
+
+    background:
+        rgba(5,13,26,.96);
 
     border:
-        1px solid rgba(255,255,255,.15);
+        1px solid
+        rgba(255,255,255,.15);
 
-    border-radius:22px;
-
-    padding:10px;
-
-    z-index:100;
+    border-radius: 28px;
 
     box-shadow:
-        0 15px 45px rgba(0,0,0,.4);
+        0 25px 70px rgba(0,0,0,.55);
 }
 
-.cameraHeader{
+#startScreen h2 {
 
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
+    margin:
+        0 0 10px;
 
-    color:white;
-
-    font-size:15px;
-    font-weight:bold;
-
-    padding:3px 8px 9px;
+    font-size: 48px;
 }
 
-.live{
+#startScreen p {
 
-    color:#4cff88;
+    color: #cbd5e1;
+
+    font-size: 17px;
+
+    line-height: 1.5;
 }
 
-#camera{
+#startButton,
+#restartButton {
 
-    width:100%;
-    height:185px;
+    border: none;
 
-    object-fit:cover;
+    padding:
+        16px 35px;
 
-    border-radius:15px;
+    border-radius: 13px;
 
-    transform:scaleX(-1);
+    background: white;
 
-    background:#000;
+    color: #07111f;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    margin-top: 12px;
 }
 
-#status{
+#startButton:hover,
+#restartButton:hover {
 
-    text-align:center;
-
-    color:#b9c7d8;
-
-    font-size:14px;
-
-    padding:8px 2px 4px;
+    transform:
+        scale(1.04);
 }
 
-/* CONTROL GUIDE */
+/* =========================
+   GAME OVER
+========================= */
 
-#controls{
+#gameOver {
 
-    position:absolute;
+    display: none;
 
-    bottom:25px;
-    left:50%;
+    position: absolute;
 
-    transform:translateX(-50%);
+    z-index: 190;
 
-    z-index:50;
+    left: 50%;
+    top: 50%;
 
-    display:flex;
+    transform:
+        translate(-50%,-50%);
 
-    gap:15px;
+    width: 480px;
+
+    max-width: 82vw;
+
+    padding: 35px;
+
+    text-align: center;
+
+    color: white;
 
     background:
-        rgba(4,12,25,.9);
+        rgba(5,13,26,.97);
 
-    padding:15px 24px;
-
-    border-radius:18px;
-
-    color:white;
-
-    font-size:15px;
+    border-radius: 25px;
 
     box-shadow:
-        0 10px 30px rgba(0,0,0,.3);
+        0 25px 70px rgba(0,0,0,.55);
 }
 
-.control{
-    white-space:nowrap;
+#gameOver h2 {
+
+    margin: 0 0 10px;
+
+    font-size: 42px;
 }
 
-/* START SCREEN */
+/* =========================
+   RESPONSIVE
+========================= */
 
-#startScreen{
+@media(max-width:800px) {
 
-    position:absolute;
+    #header h1 {
 
-    z-index:200;
-
-    top:50%;
-    left:50%;
-
-    transform:translate(-50%,-50%);
-
-    width:600px;
-    max-width:85vw;
-
-    text-align:center;
-
-    color:white;
-
-    background:
-        rgba(5,13,26,.94);
-
-    border-radius:30px;
-
-    padding:35px;
-
-    box-shadow:
-        0 25px 70px rgba(0,0,0,.5);
-}
-
-#startScreen h2{
-
-    margin:0 0 10px;
-
-    font-size:48px;
-
-}
-
-#startScreen p{
-
-    color:#cbd5e1;
-
-    font-size:18px;
-
-    line-height:1.5;
-
-}
-
-#startButton{
-
-    margin-top:15px;
-
-    border:none;
-
-    padding:17px 40px;
-
-    border-radius:14px;
-
-    font-size:19px;
-
-    font-weight:bold;
-
-    cursor:pointer;
-
-    background:white;
-
-    color:#08111f;
-
-    transition:.2s;
-
-}
-
-#startButton:hover{
-
-    transform:scale(1.05);
-
-}
-
-/* MOBILE */
-
-@media(max-width:800px){
-
-    #header h1{
-        font-size:28px;
+        font-size: 25px;
     }
 
-    #cameraPanel{
+    #header p {
 
-        width:220px;
-
-        top:10px;
-        right:10px;
-
+        font-size: 12px;
     }
 
-    #camera{
+    #cameraPanel {
 
-        height:125px;
+        width: 210px;
 
+        top: 10px;
+        right: 10px;
     }
 
-    #scoreBox{
+    #camera {
 
-        top:90px;
-
-        font-size:16px;
-
+        height: 115px;
     }
 
-    #controls{
+    #scorePanel {
 
-        width:95%;
+        top: 85px;
 
-        justify-content:center;
-
-        flex-wrap:wrap;
-
-        font-size:12px;
-
-        bottom:10px;
-
+        font-size: 13px;
     }
 
-    #player{
+    .scoreBox {
 
-        font-size:70px;
+        padding:
+            8px 12px;
+    }
 
+    #player {
+
+        font-size: 70px;
+    }
+
+    #controls {
+
+        width: 94%;
+
+        justify-content:
+            center;
+
+        flex-wrap: wrap;
+
+        gap: 8px;
+
+        font-size: 11px;
     }
 
 }
 
 </style>
+
 </head>
+
 
 <body>
 
 <div id="game">
+
+    <!-- SKY -->
 
     <div class="sun"></div>
 
     <div class="cloud cloud1"></div>
     <div class="cloud cloud2"></div>
 
+
+    <!-- ROAD -->
+
     <div id="road">
 
-        <div class="lane left"></div>
-        <div class="lane right"></div>
+        <div class="roadEdge left"></div>
+        <div class="roadEdge right"></div>
 
-        <div class="centerLine"></div>
+        <div class="laneLine left"></div>
+        <div class="laneLine right"></div>
+
+        <div class="roadDash"></div>
+        <div class="roadDash"></div>
 
     </div>
+
 
     <!-- HEADER -->
 
@@ -542,32 +865,45 @@ html,body{
 
     </div>
 
+
     <!-- SCORE -->
 
-    <div id="scoreBox">
+    <div id="scorePanel">
 
-        🏆 SCORE:
-        <span id="score">0</span>
+        <div class="scoreBox">
+
+            🏆 SCORE:
+            <span id="score">
+                000000
+            </span>
+
+        </div>
+
+        <div class="scoreBox">
+
+            🪙
+            <span id="coins">
+                0
+            </span>
+
+        </div>
 
     </div>
 
-    <!-- PLAYER -->
-
-    <div id="player">
-
-        🏃
-
-    </div>
 
     <!-- CAMERA -->
 
     <div id="cameraPanel">
 
-        <div class="cameraHeader">
+        <div class="cameraTitle">
 
-            <span>BODY CAMERA</span>
+            <span>
+                BODY CAMERA
+            </span>
 
-            <span class="live">● LIVE</span>
+            <span class="live">
+                ● LIVE
+            </span>
 
         </div>
 
@@ -585,16 +921,28 @@ html,body{
 
     </div>
 
+
+    <!-- PLAYER -->
+
+    <div
+        id="player"
+        class="running">
+
+        🏃
+
+    </div>
+
+
     <!-- CONTROLS -->
 
     <div id="controls">
 
         <div class="control">
-            👈 Left
+            👈 Body/Hand Left
         </div>
 
         <div class="control">
-            👉 Right
+            👉 Body/Hand Right
         </div>
 
         <div class="control">
@@ -607,28 +955,70 @@ html,body{
 
     </div>
 
+
     <!-- START -->
 
     <div id="startScreen">
 
-        <h2>BODY RUNNER</h2>
+        <h2>
+            🏃 BODY RUNNER
+        </h2>
 
         <p>
 
-            Control the runner using your
-            <b>body AND hands</b>.
+            Control the runner with your
+            <strong>body and hands</strong>.
 
             <br><br>
 
             Move left or right to change lanes.
-            Jump to avoid obstacles.
-            Crouch to pass under barriers.
+            <br>
+            Jump over obstacles.
+            <br>
+            Crouch under barriers.
 
         </p>
 
         <button id="startButton">
 
-            START CAMERA 🎥
+            START GAME 🎥
+
+        </button>
+
+    </div>
+
+
+    <!-- GAME OVER -->
+
+    <div id="gameOver">
+
+        <h2>
+            GAME OVER 💥
+        </h2>
+
+        <p>
+
+            Your score:
+            <strong>
+                <span id="finalScore">
+                    0
+                </span>
+            </strong>
+
+            <br><br>
+
+            Coins:
+            <strong>
+                <span id="finalCoins">
+                    0
+                </span>
+            </strong>
+
+        </p>
+
+        <button id="restartButton">
+
+            PLAY AGAIN 🔄
 
         </button>
 
@@ -639,641 +1029,1327 @@ html,body{
 
 <script>
 
-const video =
-    document.getElementById("camera");
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const game =
+    document.getElementById("game");
 
 const player =
     document.getElementById("player");
 
+const cameraVideo =
+    document.getElementById("camera");
+
 const startButton =
     document.getElementById("startButton");
 
-const status =
-    document.getElementById("status");
+const restartButton =
+    document.getElementById("restartButton");
 
 const startScreen =
     document.getElementById("startScreen");
 
+const gameOverScreen =
+    document.getElementById("gameOver");
+
+const status =
+    document.getElementById("status");
+
 const scoreElement =
     document.getElementById("score");
 
+const coinsElement =
+    document.getElementById("coins");
 
-/* =========================
-   GAME STATE
-========================= */
+const finalScore =
+    document.getElementById("finalScore");
+
+const finalCoins =
+    document.getElementById("finalCoins");
+
+
+/* =====================================================
+   GAME VARIABLES
+===================================================== */
+
+let gameRunning = false;
+
+let gameOver = false;
 
 let lane = 1;
 
 let score = 0;
 
-let jumping = false;
+let coins = 0;
 
-let crouching = false;
+let speed = 6;
 
-let gameStarted = false;
+let obstacleTimer = 0;
+
+let coinTimer = 0;
+
+let animationFrame;
 
 
 /*
     Lane positions
 
-    0 = LEFT
-    1 = CENTER
-    2 = RIGHT
+    0 = left
+    1 = center
+    2 = right
 */
 
-const lanePositions = [
-    "38%",
+const lanes = [
+    "39%",
     "50%",
-    "62%"
+    "61%"
 ];
 
 
-function movePlayer(){
+/* =====================================================
+   PLAYER MOVEMENT
+===================================================== */
+
+function updatePlayerPosition() {
 
     player.style.left =
-        lanePositions[lane];
+        lanes[lane];
 
 }
 
 
-/* =========================
-   MOVE LEFT
-========================= */
+/* LEFT */
 
-function moveLeft(){
+function moveLeft() {
 
-    if(lane > 0){
+    if (!gameRunning)
+        return;
+
+    if (lane > 0) {
 
         lane--;
 
-        movePlayer();
+        updatePlayerPosition();
 
     }
 
 }
 
 
-/* =========================
-   MOVE RIGHT
-========================= */
+/* RIGHT */
 
-function moveRight(){
+function moveRight() {
 
-    if(lane < 2){
+    if (!gameRunning)
+        return;
+
+    if (lane < 2) {
 
         lane++;
 
-        movePlayer();
+        updatePlayerPosition();
 
     }
 
 }
 
 
-/* =========================
+/* =====================================================
    JUMP
-========================= */
+===================================================== */
 
-function jump(){
+let isJumping = false;
 
-    if(jumping || crouching)
+function jump() {
+
+    if (!gameRunning)
         return;
 
-    jumping = true;
+    if (isJumping)
+        return;
+
+    isJumping = true;
 
     player.classList.add("jump");
 
-    setTimeout(()=>{
+    setTimeout(() => {
 
         player.classList.remove("jump");
 
-        jumping = false;
+        isJumping = false;
 
-    },700);
+    }, 700);
 
 }
 
 
-/* =========================
+/* =====================================================
    CROUCH
-========================= */
+===================================================== */
 
-function crouch(){
+let isCrouching = false;
 
-    if(jumping)
+function crouch() {
+
+    if (!gameRunning)
         return;
 
-    crouching = true;
+    if (isJumping)
+        return;
+
+    if (isCrouching)
+        return;
+
+    isCrouching = true;
 
     player.classList.add("crouch");
 
-    setTimeout(()=>{
+    setTimeout(() => {
 
         player.classList.remove("crouch");
 
-        crouching = false;
+        isCrouching = false;
 
-    },700);
+    }, 700);
 
 }
 
 
-/* =========================
-   KEYBOARD FALLBACK
-========================= */
+/* =====================================================
+   KEYBOARD BACKUP
+===================================================== */
 
 document.addEventListener(
     "keydown",
-    event => {
+    function(event) {
 
-        if(event.key === "ArrowLeft")
+        if (
+            event.key === "ArrowLeft" ||
+            event.key.toLowerCase() === "a"
+        ) {
+
             moveLeft();
 
-        if(event.key === "ArrowRight")
+        }
+
+        if (
+            event.key === "ArrowRight" ||
+            event.key.toLowerCase() === "d"
+        ) {
+
             moveRight();
 
-        if(
+        }
+
+        if (
             event.key === "ArrowUp" ||
-            event.key === " "
-        )
+            event.code === "Space" ||
+            event.key.toLowerCase() === "w"
+        ) {
+
+            event.preventDefault();
+
             jump();
 
-        if(event.key === "ArrowDown")
+        }
+
+        if (
+            event.key === "ArrowDown" ||
+            event.key.toLowerCase() === "s"
+        ) {
+
             crouch();
+
+        }
 
     }
 );
 
 
-/* =========================
+/* =====================================================
    SCORE
-========================= */
+===================================================== */
 
-setInterval(()=>{
+let scoreInterval;
 
-    if(gameStarted){
+function startScore() {
 
-        score++;
+    clearInterval(scoreInterval);
 
-        scoreElement.textContent =
-            score;
+    scoreInterval =
+        setInterval(() => {
+
+            if (!gameRunning)
+                return;
+
+            score++;
+
+            /*
+                Speed gradually increases
+            */
+
+            if (
+                score % 20 === 0 &&
+                speed < 14
+            ) {
+
+                speed += .5;
+
+            }
+
+            scoreElement.textContent =
+                String(score)
+                .padStart(6,"0");
+
+        }, 100);
+
+}
+
+
+/* =====================================================
+   OBSTACLE CREATION
+===================================================== */
+
+function createObstacle() {
+
+    if (!gameRunning)
+        return;
+
+    const obstacle =
+        document.createElement("div");
+
+    obstacle.className =
+        "obstacle";
+
+    obstacle.textContent =
+        "🚧";
+
+    const obstacleLane =
+        Math.floor(
+            Math.random() * 3
+        );
+
+    obstacle.dataset.lane =
+        obstacleLane;
+
+    obstacle.style.left =
+        lanes[obstacleLane];
+
+    obstacle.style.transform =
+        "translateX(-50%)";
+
+    obstacle.style.top =
+        "-80px";
+
+    game.appendChild(obstacle);
+
+    moveObstacle(obstacle);
+
+}
+
+
+/* =====================================================
+   MOVE OBSTACLE
+===================================================== */
+
+function moveObstacle(obstacle) {
+
+    let position = -80;
+
+    function frame() {
+
+        if (!gameRunning) {
+
+            return;
+
+        }
+
+        position += speed;
+
+        obstacle.style.top =
+            position + "px";
+
+
+        /*
+            Collision check
+        */
+
+        const obstacleRect =
+            obstacle.getBoundingClientRect();
+
+        const playerRect =
+            player.getBoundingClientRect();
+
+
+        const sameLane =
+            Number(
+                obstacle.dataset.lane
+            ) === lane;
+
+
+        const verticalCollision =
+            obstacleRect.bottom >
+            playerRect.top + 20 &&
+            obstacleRect.top <
+            playerRect.bottom;
+
+
+        if (
+            sameLane &&
+            verticalCollision &&
+            !isJumping
+        ) {
+
+            endGame();
+
+            return;
+
+        }
+
+
+        /*
+            Remove when off screen
+        */
+
+        if (
+            position >
+            window.innerHeight + 100
+        ) {
+
+            obstacle.remove();
+
+            return;
+
+        }
+
+
+        requestAnimationFrame(frame);
 
     }
 
-},1000);
+    requestAnimationFrame(frame);
+
+}
 
 
-/* =========================
-   MEDIAPIPE POSE
-========================= */
+/* =====================================================
+   COIN CREATION
+===================================================== */
+
+function createCoin() {
+
+    if (!gameRunning)
+        return;
+
+    const coin =
+        document.createElement("div");
+
+    coin.className =
+        "coin";
+
+    coin.textContent =
+        "🪙";
+
+    const coinLane =
+        Math.floor(
+            Math.random() * 3
+        );
+
+    coin.dataset.lane =
+        coinLane;
+
+    coin.style.left =
+        lanes[coinLane];
+
+    coin.style.transform =
+        "translateX(-50%)";
+
+    coin.style.top =
+        "-60px";
+
+    game.appendChild(coin);
+
+    moveCoin(coin);
+
+}
+
+
+/* =====================================================
+   MOVE COIN
+===================================================== */
+
+function moveCoin(coin) {
+
+    let position = -60;
+
+    function frame() {
+
+        if (!gameRunning)
+            return;
+
+        position += speed;
+
+        coin.style.top =
+            position + "px";
+
+
+        const coinRect =
+            coin.getBoundingClientRect();
+
+        const playerRect =
+            player.getBoundingClientRect();
+
+
+        const sameLane =
+            Number(
+                coin.dataset.lane
+            ) === lane;
+
+
+        const collected =
+            coinRect.bottom >
+            playerRect.top &&
+            coinRect.top <
+            playerRect.bottom;
+
+
+        if (
+            sameLane &&
+            collected
+        ) {
+
+            coins++;
+
+            coinsElement.textContent =
+                coins;
+
+            coin.remove();
+
+            return;
+
+        }
+
+
+        if (
+            position >
+            window.innerHeight + 100
+        ) {
+
+            coin.remove();
+
+            return;
+
+        }
+
+
+        requestAnimationFrame(frame);
+
+    }
+
+    requestAnimationFrame(frame);
+
+}
+
+
+/* =====================================================
+   SPAWN LOOP
+===================================================== */
+
+function spawnLoop() {
+
+    if (!gameRunning)
+        return;
+
+
+    obstacleTimer++;
+
+    coinTimer++;
+
+
+    /*
+        Obstacles
+    */
+
+    if (
+        obstacleTimer >
+        Math.max(
+            45,
+            100 - speed * 4
+        )
+    ) {
+
+        createObstacle();
+
+        obstacleTimer = 0;
+
+    }
+
+
+    /*
+        Coins
+    */
+
+    if (
+        coinTimer > 55
+    ) {
+
+        createCoin();
+
+        coinTimer = 0;
+
+    }
+
+
+    requestAnimationFrame(
+        spawnLoop
+    );
+
+}
+
+
+/* =====================================================
+   START GAME
+===================================================== */
+
+async function startGame() {
+
+    /*
+        IMPORTANT:
+        Hide the large start screen
+        immediately.
+    */
+
+    startScreen.style.display =
+        "none";
+
+    gameOverScreen.style.display =
+        "none";
+
+
+    gameRunning = true;
+
+    gameOver = false;
+
+    score = 0;
+
+    coins = 0;
+
+    lane = 1;
+
+    speed = 6;
+
+    obstacleTimer = 0;
+
+    coinTimer = 0;
+
+
+    scoreElement.textContent =
+        "000000";
+
+    coinsElement.textContent =
+        "0";
+
+
+    updatePlayerPosition();
+
+
+    try {
+
+        status.textContent =
+            "Starting camera...";
+
+
+        const stream =
+            await navigator.mediaDevices
+                .getUserMedia({
+
+                    video: {
+
+                        width: 1280,
+
+                        height: 720,
+
+                        facingMode: "user"
+
+                    },
+
+                    audio: false
+
+                });
+
+
+        cameraVideo.srcObject =
+            stream;
+
+
+        await cameraVideo.play();
+
+
+        status.innerHTML =
+            "Camera is working! 🎥<br>" +
+            "Move your body or hands.";
+
+
+        /*
+            Start computer vision
+        */
+
+        startPoseTracking();
+
+        startHandTracking();
+
+
+    }
+    catch(error) {
+
+        console.error(error);
+
+        status.innerHTML =
+            "Camera unavailable.<br>" +
+            "Keyboard controls are active.";
+
+    }
+
+
+    startScore();
+
+    spawnLoop();
+
+}
+
+
+/* =====================================================
+   END GAME
+===================================================== */
+
+function endGame() {
+
+    if (gameOver)
+        return;
+
+    gameRunning = false;
+
+    gameOver = true;
+
+    clearInterval(
+        scoreInterval
+    );
+
+
+    finalScore.textContent =
+        score;
+
+    finalCoins.textContent =
+        coins;
+
+
+    gameOverScreen.style.display =
+        "block";
+
+
+    /*
+        Stop camera
+        only after game ends
+    */
+
+}
+
+
+/* =====================================================
+   RESTART
+===================================================== */
+
+restartButton.addEventListener(
+    "click",
+    function() {
+
+        /*
+            Remove old objects
+        */
+
+        document
+            .querySelectorAll(
+                ".obstacle,.coin"
+            )
+            .forEach(
+                element =>
+                    element.remove()
+            );
+
+
+        player.classList.remove(
+            "jump",
+            "crouch"
+        );
+
+
+        isJumping = false;
+
+        isCrouching = false;
+
+
+        startGame();
+
+    }
+);
+
+
+/* =====================================================
+   START BUTTON
+===================================================== */
+
+startButton.addEventListener(
+    "click",
+    startGame
+);
+
+
+/* =====================================================
+   POSE TRACKING
+===================================================== */
 
 let pose;
 
-let previousBodyX = 0.5;
+let previousBodyX = null;
+
+let previousHipY = null;
 
 let bodyCooldown = 0;
 
-
-/*
-    Create Pose detector
-*/
-
-pose = new Pose({
-
-    locateFile: file => {
-
-        return `
-        https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}
-        `;
-
-    }
-
-});
+let jumpCooldown = 0;
 
 
-pose.setOptions({
+/* Create Pose */
 
-    modelComplexity:1,
+function startPoseTracking() {
 
-    smoothLandmarks:true,
-
-    enableSegmentation:false,
-
-    minDetectionConfidence:.55,
-
-    minTrackingConfidence:.55
-
-});
+    if (pose)
+        return;
 
 
-pose.onResults(
-    results => {
+    pose =
+        new Pose({
 
-        if(!results.poseLandmarks)
-            return;
+            locateFile:
+            function(file) {
 
-
-        const landmarks =
-            results.poseLandmarks;
-
-
-        /*
-            Important body landmarks
-
-            11 = left shoulder
-            12 = right shoulder
-            23 = left hip
-            24 = right hip
-            15 = left wrist
-            16 = right wrist
-        */
-
-
-        const leftShoulder =
-            landmarks[11];
-
-        const rightShoulder =
-            landmarks[12];
-
-        const leftHip =
-            landmarks[23];
-
-        const rightHip =
-            landmarks[24];
-
-
-        if(
-            !leftShoulder ||
-            !rightShoulder ||
-            !leftHip ||
-            !rightHip
-        )
-            return;
-
-
-        /*
-            BODY CENTER
-        */
-
-        const bodyX =
-            (
-                leftShoulder.x +
-                rightShoulder.x
-            ) / 2;
-
-
-        /*
-            BODY LEFT / RIGHT
-
-            Large movement of the
-            body controls lanes.
-        */
-
-        const difference =
-            bodyX -
-            previousBodyX;
-
-
-        if(
-            bodyCooldown <= 0
-        ){
-
-            if(difference < -0.07){
-
-                moveLeft();
-
-                bodyCooldown = 12;
+                return (
+                    "https://cdn.jsdelivr.net/npm/" +
+                    "@mediapipe/pose/" +
+                    file
+                );
 
             }
 
-            if(difference > 0.07){
-
-                moveRight();
-
-                bodyCooldown = 12;
-
-            }
-
-        }
+        });
 
 
-        if(bodyCooldown > 0)
-            bodyCooldown--;
+    pose.setOptions({
 
+        modelComplexity: 1,
 
-        previousBodyX =
-            bodyX;
+        smoothLandmarks: true,
 
+        enableSegmentation: false,
 
-        /*
-            JUMP DETECTION
+        minDetectionConfidence: .55,
 
-            Hip moving upward means
-            the person is jumping.
-        */
-
-        const hipY =
-            (
-                leftHip.y +
-                rightHip.y
-            ) / 2;
-
-
-        if(
-            window.previousHipY !== undefined
-        ){
-
-            const jumpMovement =
-                window.previousHipY -
-                hipY;
-
-
-            if(
-                jumpMovement > 0.055
-            ){
-
-                jump();
-
-            }
-
-        }
-
-
-        window.previousHipY =
-            hipY;
-
-
-        /*
-            CROUCH DETECTION
-
-            Hips moving downward
-            significantly = crouch.
-        */
-
-        if(
-            window.previousHipY !== undefined
-        ){
-
-            const crouchMovement =
-                hipY -
-                window.lastHipY;
-
-
-            if(
-                crouchMovement > 0.045
-            ){
-
-                crouch();
-
-            }
-
-        }
-
-        window.lastHipY =
-            hipY;
-
-    }
-);
-
-
-/* =========================
-   HAND TRACKING
-========================= */
-
-const hands =
-    new Hands({
-
-        locateFile:file=>{
-
-            return `
-            https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}
-            `;
-
-        }
+        minTrackingConfidence: .55
 
     });
 
 
-hands.setOptions({
-
-    maxNumHands:2,
-
-    modelComplexity:1,
-
-    minDetectionConfidence:.55,
-
-    minTrackingConfidence:.55
-
-});
+    pose.onResults(
+        processPose
+    );
 
 
-let previousHandX =
-    0.5;
+    /*
+        Camera processing loop
+    */
 
-let handCooldown =
-    0;
+    async function processFrame() {
+
+        if (
+            cameraVideo.readyState >= 2
+        ) {
+
+            try {
+
+                await pose.send({
+                    image: cameraVideo
+                });
+
+            }
+            catch(error) {
+
+                console.log(
+                    "Pose:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        if (gameRunning) {
+
+            requestAnimationFrame(
+                processFrame
+            );
+
+        }
+
+    }
+
+
+    processFrame();
+
+}
+
+
+/* =====================================================
+   PROCESS BODY
+===================================================== */
+
+function processPose(results) {
+
+    if (!results.poseLandmarks)
+        return;
+
+
+    const landmarks =
+        results.poseLandmarks;
+
+
+    const leftShoulder =
+        landmarks[11];
+
+    const rightShoulder =
+        landmarks[12];
+
+    const leftHip =
+        landmarks[23];
+
+    const rightHip =
+        landmarks[24];
+
+
+    if (
+        !leftShoulder ||
+        !rightShoulder ||
+        !leftHip ||
+        !rightHip
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+        BODY CENTER
+    */
+
+    const bodyX =
+        (
+            leftShoulder.x +
+            rightShoulder.x
+        ) / 2;
+
+
+    /*
+        BODY LEFT / RIGHT
+    */
+
+    if (
+        previousBodyX !== null &&
+        bodyCooldown <= 0
+    ) {
+
+        const movement =
+            bodyX -
+            previousBodyX;
+
+
+        /*
+            Move LEFT
+
+            Camera is mirrored visually,
+            so the threshold is intentionally
+            inverted.
+        */
+
+        if (
+            movement < -.045
+        ) {
+
+            moveRight();
+
+            bodyCooldown = 12;
+
+        }
+
+
+        /*
+            Move RIGHT
+        */
+
+        else if (
+            movement > .045
+        ) {
+
+            moveLeft();
+
+            bodyCooldown = 12;
+
+        }
+
+    }
+
+
+    if (bodyCooldown > 0)
+        bodyCooldown--;
+
+
+    previousBodyX =
+        bodyX;
+
+
+    /*
+        HIP POSITION
+    */
+
+    const hipY =
+        (
+            leftHip.y +
+            rightHip.y
+        ) / 2;
+
+
+    /*
+        JUMP DETECTION
+
+        Sudden upward hip movement.
+    */
+
+    if (
+        previousHipY !== null &&
+        jumpCooldown <= 0
+    ) {
+
+        const verticalMovement =
+            previousHipY -
+            hipY;
+
+
+        if (
+            verticalMovement > .035
+        ) {
+
+            jump();
+
+            jumpCooldown = 20;
+
+        }
+
+    }
+
+
+    /*
+        CROUCH DETECTION
+
+        Hip moving down.
+    */
+
+    if (
+        previousHipY !== null &&
+        !isJumping &&
+        verticalMovementSafe(
+            hipY,
+            previousHipY
+        )
+    ) {
+
+        const downMovement =
+            hipY -
+            previousHipY;
+
+
+        if (
+            downMovement > .025
+        ) {
+
+            crouch();
+
+        }
+
+    }
+
+
+    if (jumpCooldown > 0)
+        jumpCooldown--;
+
+
+    previousHipY =
+        hipY;
+
+}
 
 
 /*
-    HAND RESULTS
+    Small helper
 */
 
-hands.onResults(
-    results => {
+function verticalMovementSafe(
+    current,
+    previous
+) {
 
-        if(
-            !results.multiHandLandmarks ||
-            results.multiHandLandmarks.length === 0
-        )
-            return;
+    return (
+        current !== undefined &&
+        previous !== undefined
+    );
 
-
-        /*
-            Use first detected hand
-        */
-
-        const hand =
-            results.multiHandLandmarks[0];
+}
 
 
-        const wrist =
-            hand[0];
+/* =====================================================
+   HAND TRACKING
+===================================================== */
 
-        const index =
-            hand[8];
+let hands;
 
+let previousHandX = null;
 
-        if(!wrist || !index)
-            return;
+let handCooldown = 0;
 
-
-        /*
-            Hand center
-        */
-
-        const handX =
-            (
-                wrist.x +
-                index.x
-            ) / 2;
+let handJumpCooldown = 0;
 
 
-        /*
-            HAND LEFT / RIGHT
-        */
+/* Start hands */
+
+function startHandTracking() {
+
+    if (hands)
+        return;
+
+
+    hands =
+        new Hands({
+
+            locateFile:
+            function(file) {
+
+                return (
+                    "https://cdn.jsdelivr.net/npm/" +
+                    "@mediapipe/hands/" +
+                    file
+                );
+
+            }
+
+        });
+
+
+    hands.setOptions({
+
+        maxNumHands: 2,
+
+        modelComplexity: 1,
+
+        minDetectionConfidence: .55,
+
+        minTrackingConfidence: .55
+
+    });
+
+
+    hands.onResults(
+        processHands
+    );
+
+
+    async function processHandFrame() {
+
+        if (
+            cameraVideo.readyState >= 2
+        ) {
+
+            try {
+
+                await hands.send({
+                    image: cameraVideo
+                });
+
+            }
+            catch(error) {
+
+                console.log(
+                    "Hands:",
+                    error
+                );
+
+            }
+
+        }
+
+
+        if (gameRunning) {
+
+            requestAnimationFrame(
+                processHandFrame
+            );
+
+        }
+
+    }
+
+
+    processHandFrame();
+
+}
+
+
+/* =====================================================
+   PROCESS HAND
+===================================================== */
+
+function processHands(results) {
+
+    if (
+        !results.multiHandLandmarks ||
+        results.multiHandLandmarks.length === 0
+    ) {
+
+        return;
+
+    }
+
+
+    const hand =
+        results.multiHandLandmarks[0];
+
+
+    const wrist =
+        hand[0];
+
+    const indexFinger =
+        hand[8];
+
+
+    if (
+        !wrist ||
+        !indexFinger
+    ) {
+
+        return;
+
+    }
+
+
+    /*
+        HAND CENTER
+    */
+
+    const handX =
+        (
+            wrist.x +
+            indexFinger.x
+        ) / 2;
+
+
+    /*
+        HAND LEFT / RIGHT
+    */
+
+    if (
+        previousHandX !== null &&
+        handCooldown <= 0
+    ) {
 
         const movement =
             handX -
             previousHandX;
 
 
-        if(
-            handCooldown <= 0
-        ){
+        /*
+            Hand moves visually LEFT
+        */
 
-            if(
-                movement < -0.09
-            ){
+        if (
+            movement < -.07
+        ) {
 
-                moveLeft();
+            moveRight();
 
-                handCooldown =
-                    14;
-
-            }
-
-
-            if(
-                movement > 0.09
-            ){
-
-                moveRight();
-
-                handCooldown =
-                    14;
-
-            }
+            handCooldown = 14;
 
         }
-
-
-        if(handCooldown > 0)
-            handCooldown--;
-
-
-        previousHandX =
-            handX;
 
 
         /*
-            HAND JUMP
-
-            Index finger / wrist
-            above the head area.
+            Hand moves visually RIGHT
         */
 
-        const handY =
-            wrist.y;
+        else if (
+            movement > .07
+        ) {
 
+            moveLeft();
 
-        if(
-            handY < 0.25
-        ){
-
-            jump();
-
-        }
-
-
-    }
-);
-
-
-/* =========================
-   CAMERA
-========================= */
-
-startButton.addEventListener(
-    "click",
-    async()=>{
-
-        try{
-
-            const stream =
-                await navigator.mediaDevices.getUserMedia({
-
-                    video:{
-                        width:1280,
-                        height:720,
-                        facingMode:"user"
-                    },
-
-                    audio:false
-
-                });
-
-
-            video.srcObject =
-                stream;
-
-
-            startScreen.style.display =
-                "none";
-
-
-            status.innerHTML =
-                "Camera is working! 🎥<br>Move your body or hands.";
-
-
-            gameStarted =
-                true;
-
-
-            /*
-                Start MediaPipe camera
-            */
-
-            const camera =
-                new Camera(
-                    video,
-                    {
-
-                        onFrame:
-                        async()=>{
-
-                            await pose.send({
-                                image:video
-                            });
-
-                            await hands.send({
-                                image:video
-                            });
-
-                        },
-
-                        width:1280,
-
-                        height:720
-
-                    }
-                );
-
-
-            camera.start();
-
-
-        }
-        catch(error){
-
-            console.error(error);
-
-            status.textContent =
-                "Camera permission denied.";
+            handCooldown = 14;
 
         }
 
     }
-);
+
+
+    if (handCooldown > 0)
+        handCooldown--;
+
+
+    previousHandX =
+        handX;
+
+
+    /*
+        HAND RAISED = JUMP
+
+        Wrist close to top of camera.
+    */
+
+    if (
+        wrist.y < .22 &&
+        handJumpCooldown <= 0
+    ) {
+
+        jump();
+
+        handJumpCooldown = 25;
+
+    }
+
+
+    if (
+        handJumpCooldown > 0
+    ) {
+
+        handJumpCooldown--;
+
+    }
+
+}
+
+
+/* =====================================================
+   INITIAL POSITION
+===================================================== */
+
+updatePlayerPosition();
 
 </script>
 
