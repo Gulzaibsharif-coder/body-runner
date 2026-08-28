@@ -1,14 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
-
-<title>BODY RUNNER</title>
+<title>Body Runner - Active Motion Game</title>
 
 <!-- MediaPipe -->
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
@@ -17,1010 +13,390 @@
 
 <style>
 
-/* =========================
-   BASIC
-========================= */
-
-* {
-    box-sizing: border-box;
+*{
+    box-sizing:border-box;
 }
 
-html,
-body {
-    margin: 0;
-    padding: 0;
-
-    width: 100%;
-    height: 100%;
-
-    overflow: hidden;
-
-    font-family:
-        Arial,
-        Helvetica,
-        sans-serif;
-
-    background: #07111f;
+html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#07111f;
 }
 
-/* =========================
-   GAME WORLD
-========================= */
-
-#game {
-
-    position: relative;
-
-    width: 100vw;
-    height: 100vh;
-
-    overflow: hidden;
-
-    background:
-        linear-gradient(
-            to bottom,
-            #4fc3ea 0%,
-            #9ce5f7 38%,
-            #73b55c 39%,
-            #4f9148 100%
-        );
+body{
+    color:white;
 }
 
-/* =========================
-   SUN
-========================= */
+/* ================= HEADER ================= */
 
-.sun {
-
-    position: absolute;
-
-    width: 150px;
-    height: 150px;
-
-    right: 12%;
-    top: 9%;
-
-    border-radius: 50%;
-
-    background: #ffe783;
-
-    box-shadow:
-        0 0 70px rgba(255, 230, 100, .8);
+.header{
+    height:72px;
+    background:#07111f;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 28px;
+    position:relative;
+    z-index:20;
+    box-shadow:0 4px 15px rgba(0,0,0,.35);
 }
 
-/* =========================
-   CLOUDS
-========================= */
-
-.cloud {
-
-    position: absolute;
-
-    width: 150px;
-    height: 45px;
-
-    background: rgba(255,255,255,.85);
-
-    border-radius: 50px;
+.logo{
+    display:flex;
+    align-items:center;
+    gap:14px;
 }
 
-.cloud::before {
-
-    content: "";
-
-    position: absolute;
-
-    width: 70px;
-    height: 70px;
-
-    left: 20px;
-    top: -35px;
-
-    border-radius: 50%;
-
-    background: white;
+.logo-icon{
+    font-size:42px;
 }
 
-.cloud::after {
-
-    content: "";
-
-    position: absolute;
-
-    width: 80px;
-    height: 80px;
-
-    right: 15px;
-    top: -40px;
-
-    border-radius: 50%;
-
-    background: white;
+.logo-text{
+    font-size:32px;
+    font-weight:900;
+    letter-spacing:2px;
 }
 
-.cloud1 {
-
-    left: 10%;
-    top: 16%;
+.stats{
+    display:flex;
+    gap:14px;
 }
 
-.cloud2 {
-
-    right: 28%;
-    top: 22%;
-
-    transform: scale(.7);
+.stat{
+    background:#101c2c;
+    border:1px solid rgba(255,255,255,.15);
+    padding:11px 22px;
+    border-radius:14px;
+    font-size:19px;
+    font-weight:bold;
 }
 
-/* =========================
-   ROAD
-========================= */
+/* ================= GAME ================= */
 
-#road {
-
-    position: absolute;
-
-    width: 70%;
-    height: 78%;
-
-    bottom: -2%;
-    left: 50%;
-
-    transform:
-        translateX(-50%);
-
-    background:
-        linear-gradient(
-            90deg,
-            #252e39,
-            #141c28 50%,
-            #252e39
-        );
-
-    clip-path:
-        polygon(
-            37% 0,
-            63% 0,
-            100% 100%,
-            0 100%
-        );
+.game-wrapper{
+    position:relative;
+    width:100%;
+    height:calc(100vh - 72px);
+    overflow:hidden;
 }
 
-/* Road edges */
-
-.roadEdge {
-
-    position: absolute;
-
-    width: 7px;
-    height: 100%;
-
-    background: white;
-
-    opacity: .9;
+canvas{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
 }
 
-.roadEdge.left {
+/* ================= CAMERA ================= */
 
-    left: 24%;
+.camera-panel{
+    position:absolute;
+    top:20px;
+    right:22px;
+    width:300px;
+    background:#07111f;
+    border-radius:20px;
+    padding:12px;
+    z-index:10;
+    box-shadow:0 10px 35px rgba(0,0,0,.45);
+    border:1px solid rgba(255,255,255,.12);
 }
 
-.roadEdge.right {
-
-    right: 24%;
+.camera-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-weight:bold;
+    font-size:17px;
+    margin-bottom:9px;
 }
 
-/* Lane lines */
-
-.laneLine {
-
-    position: absolute;
-
-    width: 7px;
-    height: 100%;
-
-    background: #87909a;
-
-    opacity: .8;
+.live{
+    color:#48ff86;
 }
 
-.laneLine.left {
-
-    left: 42%;
+#camera{
+    width:100%;
+    height:170px;
+    object-fit:cover;
+    border-radius:14px;
+    transform:scaleX(-1);
+    background:#172438;
 }
 
-.laneLine.right {
-
-    right: 42%;
+.camera-status{
+    text-align:center;
+    padding:8px 2px 2px;
+    color:#bcd0e8;
+    font-size:14px;
 }
 
-/* =========================
-   ROAD MOVEMENT
-========================= */
+/* ================= START SCREEN ================= */
 
-.roadDash {
-
-    position: absolute;
-
-    left: 50%;
-
-    width: 8px;
-    height: 80px;
-
-    transform:
-        translateX(-50%);
-
-    background: white;
-
-    opacity: .8;
-
-    animation:
-        roadAnimation .7s linear infinite;
+.start-screen{
+    position:absolute;
+    inset:0;
+    z-index:30;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(3,9,17,.48);
+    backdrop-filter:blur(3px);
 }
 
-.roadDash:nth-child(2) {
-
-    animation-delay: .35s;
+.start-card{
+    width:min(650px,90%);
+    background:rgba(7,17,31,.95);
+    border:1px solid rgba(255,255,255,.16);
+    border-radius:28px;
+    padding:42px;
+    text-align:center;
+    box-shadow:0 25px 70px rgba(0,0,0,.5);
 }
 
-@keyframes roadAnimation {
+.start-card h1{
+    font-size:52px;
+    margin:0 0 10px;
+    letter-spacing:2px;
+}
 
-    0% {
+.start-card p{
+    color:#c7d6e7;
+    font-size:19px;
+    line-height:1.6;
+}
 
-        top: -100px;
+.controls-info{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:10px;
+    margin:25px 0;
+}
 
+.control-box{
+    background:#111f32;
+    padding:13px 6px;
+    border-radius:12px;
+    font-size:14px;
+}
+
+.start-button{
+    border:0;
+    border-radius:15px;
+    padding:17px 42px;
+    font-size:20px;
+    font-weight:900;
+    cursor:pointer;
+    background:white;
+    color:#07111f;
+    transition:.2s;
+}
+
+.start-button:hover{
+    transform:scale(1.05);
+}
+
+.fitness-message{
+    margin-top:20px;
+    color:#7dffb0;
+    font-size:15px;
+    line-height:1.5;
+}
+
+/* ================= GAME MESSAGE ================= */
+
+.message{
+    position:absolute;
+    top:25px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:8;
+    background:rgba(7,17,31,.88);
+    padding:10px 22px;
+    border-radius:20px;
+    font-weight:bold;
+    opacity:0;
+    transition:.25s;
+}
+
+/* ================= MOBILE ================= */
+
+@media(max-width:700px){
+
+    .header{
+        height:60px;
+        padding:0 12px;
     }
 
-    100% {
-
-        top: 100%;
-
-    }
-}
-
-/* =========================
-   HEADER
-========================= */
-
-#header {
-
-    position: absolute;
-
-    top: 15px;
-    left: 25px;
-
-    z-index: 30;
-
-    color: white;
-
-    text-shadow:
-        0 3px 8px rgba(0,0,0,.5);
-}
-
-#header h1 {
-
-    margin: 0;
-
-    font-size: 38px;
-
-    letter-spacing: 2px;
-}
-
-#header p {
-
-    margin: 5px 0;
-
-    font-size: 16px;
-}
-
-/* =========================
-   SCORE
-========================= */
-
-#scorePanel {
-
-    position: absolute;
-
-    top: 18px;
-    left: 50%;
-
-    transform:
-        translateX(-50%);
-
-    z-index: 40;
-
-    display: flex;
-
-    gap: 12px;
-
-    color: white;
-}
-
-.scoreBox {
-
-    padding:
-        12px 20px;
-
-    background:
-        rgba(5,13,26,.9);
-
-    border-radius: 15px;
-
-    font-size: 19px;
-
-    font-weight: bold;
-
-    box-shadow:
-        0 8px 25px rgba(0,0,0,.3);
-}
-
-/* =========================
-   CAMERA
-========================= */
-
-#cameraPanel {
-
-    position: absolute;
-
-    top: 15px;
-    right: 15px;
-
-    width: 310px;
-
-    padding: 10px;
-
-    z-index: 100;
-
-    background:
-        rgba(4,12,24,.96);
-
-    border-radius: 20px;
-
-    box-shadow:
-        0 15px 45px rgba(0,0,0,.4);
-}
-
-.cameraTitle {
-
-    display: flex;
-
-    justify-content:
-        space-between;
-
-    align-items: center;
-
-    padding:
-        3px 7px 8px;
-
-    color: white;
-
-    font-size: 14px;
-
-    font-weight: bold;
-}
-
-.live {
-
-    color: #43ff86;
-}
-
-#camera {
-
-    width: 100%;
-
-    height: 170px;
-
-    display: block;
-
-    object-fit: cover;
-
-    border-radius: 14px;
-
-    transform:
-        scaleX(-1);
-
-    background: black;
-}
-
-#status {
-
-    padding:
-        7px 2px 2px;
-
-    text-align: center;
-
-    color: #c8d5e5;
-
-    font-size: 13px;
-
-    line-height: 1.4;
-}
-
-/* =========================
-   PLAYER
-========================= */
-
-#player {
-
-    position: absolute;
-
-    left: 50%;
-    bottom: 19%;
-
-    transform:
-        translateX(-50%);
-
-    z-index: 20;
-
-    font-size: 90px;
-
-    transition:
-        left .12s ease,
-        bottom .12s ease,
-        transform .12s ease;
-
-    filter:
-        drop-shadow(
-            0 10px 5px
-            rgba(0,0,0,.4)
-        );
-}
-
-/* Running animation */
-
-#player.running {
-
-    animation:
-        playerRun .25s infinite alternate;
-}
-
-@keyframes playerRun {
-
-    from {
-
-        transform:
-            translateX(-50%)
-            translateY(0);
-
+    .logo-text{
+        font-size:20px;
     }
 
-    to {
-
-        transform:
-            translateX(-50%)
-            translateY(-5px);
-
-    }
-}
-
-/* Jump */
-
-#player.jump {
-
-    bottom: 43%;
-
-    transform:
-        translateX(-50%)
-        scale(1.1)
-        rotate(-5deg);
-}
-
-/* Crouch */
-
-#player.crouch {
-
-    bottom: 18%;
-
-    transform:
-        translateX(-50%)
-        scale(.75,.55);
-}
-
-/* =========================
-   OBJECTS
-========================= */
-
-.obstacle {
-
-    position: absolute;
-
-    width: 70px;
-    height: 55px;
-
-    z-index: 15;
-
-    display: flex;
-
-    justify-content: center;
-
-    align-items: center;
-
-    font-size: 48px;
-
-    filter:
-        drop-shadow(
-            0 7px 5px
-            rgba(0,0,0,.35)
-        );
-}
-
-.coin {
-
-    position: absolute;
-
-    z-index: 14;
-
-    font-size: 42px;
-
-    filter:
-        drop-shadow(
-            0 5px 5px
-            rgba(0,0,0,.35)
-        );
-
-    animation:
-        coinSpin .6s infinite linear;
-}
-
-@keyframes coinSpin {
-
-    0% {
-
-        transform:
-            scaleX(1);
-
+    .logo-icon{
+        font-size:28px;
     }
 
-    50% {
-
-        transform:
-            scaleX(.35);
-
+    .stat{
+        padding:7px 10px;
+        font-size:13px;
     }
 
-    100% {
-
-        transform:
-            scaleX(1);
-
-    }
-}
-
-/* =========================
-   CONTROLS
-========================= */
-
-#controls {
-
-    position: absolute;
-
-    left: 50%;
-    bottom: 18px;
-
-    transform:
-        translateX(-50%);
-
-    z-index: 50;
-
-    display: flex;
-
-    gap: 15px;
-
-    padding:
-        13px 20px;
-
-    border-radius: 17px;
-
-    background:
-        rgba(5,13,26,.92);
-
-    color: white;
-
-    font-size: 14px;
-
-    box-shadow:
-        0 10px 30px rgba(0,0,0,.35);
-}
-
-.control {
-
-    white-space: nowrap;
-}
-
-/* =========================
-   START SCREEN
-========================= */
-
-#startScreen {
-
-    position: absolute;
-
-    z-index: 200;
-
-    left: 50%;
-    top: 50%;
-
-    transform:
-        translate(-50%,-50%);
-
-    width: 570px;
-
-    max-width: 82vw;
-
-    padding: 35px;
-
-    text-align: center;
-
-    color: white;
-
-    background:
-        rgba(5,13,26,.96);
-
-    border:
-        1px solid
-        rgba(255,255,255,.15);
-
-    border-radius: 28px;
-
-    box-shadow:
-        0 25px 70px rgba(0,0,0,.55);
-}
-
-#startScreen h2 {
-
-    margin:
-        0 0 10px;
-
-    font-size: 48px;
-}
-
-#startScreen p {
-
-    color: #cbd5e1;
-
-    font-size: 17px;
-
-    line-height: 1.5;
-}
-
-#startButton,
-#restartButton {
-
-    border: none;
-
-    padding:
-        16px 35px;
-
-    border-radius: 13px;
-
-    background: white;
-
-    color: #07111f;
-
-    font-size: 18px;
-
-    font-weight: bold;
-
-    cursor: pointer;
-
-    margin-top: 12px;
-}
-
-#startButton:hover,
-#restartButton:hover {
-
-    transform:
-        scale(1.04);
-}
-
-/* =========================
-   GAME OVER
-========================= */
-
-#gameOver {
-
-    display: none;
-
-    position: absolute;
-
-    z-index: 190;
-
-    left: 50%;
-    top: 50%;
-
-    transform:
-        translate(-50%,-50%);
-
-    width: 480px;
-
-    max-width: 82vw;
-
-    padding: 35px;
-
-    text-align: center;
-
-    color: white;
-
-    background:
-        rgba(5,13,26,.97);
-
-    border-radius: 25px;
-
-    box-shadow:
-        0 25px 70px rgba(0,0,0,.55);
-}
-
-#gameOver h2 {
-
-    margin: 0 0 10px;
-
-    font-size: 42px;
-}
-
-/* =========================
-   RESPONSIVE
-========================= */
-
-@media(max-width:800px) {
-
-    #header h1 {
-
-        font-size: 25px;
+    .camera-panel{
+        width:180px;
+        top:10px;
+        right:10px;
     }
 
-    #header p {
-
-        font-size: 12px;
+    #camera{
+        height:105px;
     }
 
-    #cameraPanel {
-
-        width: 210px;
-
-        top: 10px;
-        right: 10px;
+    .camera-title{
+        font-size:12px;
     }
 
-    #camera {
-
-        height: 115px;
+    .camera-status{
+        font-size:11px;
     }
 
-    #scorePanel {
-
-        top: 85px;
-
-        font-size: 13px;
+    .start-card{
+        padding:25px 18px;
     }
 
-    .scoreBox {
-
-        padding:
-            8px 12px;
+    .start-card h1{
+        font-size:35px;
     }
 
-    #player {
-
-        font-size: 70px;
+    .controls-info{
+        grid-template-columns:repeat(2,1fr);
     }
-
-    #controls {
-
-        width: 94%;
-
-        justify-content:
-            center;
-
-        flex-wrap: wrap;
-
-        gap: 8px;
-
-        font-size: 11px;
-    }
-
 }
 
 </style>
-
 </head>
-
 
 <body>
 
-<div id="game">
+<!-- ================= HEADER ================= -->
 
-    <!-- SKY -->
+<header class="header">
 
-    <div class="sun"></div>
-
-    <div class="cloud cloud1"></div>
-    <div class="cloud cloud2"></div>
-
-
-    <!-- ROAD -->
-
-    <div id="road">
-
-        <div class="roadEdge left"></div>
-        <div class="roadEdge right"></div>
-
-        <div class="laneLine left"></div>
-        <div class="laneLine right"></div>
-
-        <div class="roadDash"></div>
-        <div class="roadDash"></div>
-
+    <div class="logo">
+        <div class="logo-icon">🏃</div>
+        <div class="logo-text">BODY RUNNER</div>
     </div>
 
+    <div class="stats">
 
-    <!-- HEADER -->
-
-    <div id="header">
-
-        <h1>🏃 BODY RUNNER</h1>
-
-        <p>
-            Move your body • Move your hands • Keep running
-        </p>
-
-    </div>
-
-
-    <!-- SCORE -->
-
-    <div id="scorePanel">
-
-        <div class="scoreBox">
-
+        <div class="stat">
             🏆 SCORE:
-            <span id="score">
-                000000
-            </span>
-
+            <span id="score">0</span>
         </div>
 
-        <div class="scoreBox">
-
-            🪙
-            <span id="coins">
-                0
-            </span>
-
+        <div class="stat">
+            🪙 <span id="coins">0</span>
         </div>
 
     </div>
+
+</header>
+
+
+<!-- ================= GAME ================= -->
+
+<div class="game-wrapper">
+
+    <canvas id="gameCanvas"></canvas>
 
 
     <!-- CAMERA -->
 
-    <div id="cameraPanel">
+    <div class="camera-panel">
 
-        <div class="cameraTitle">
+        <div class="camera-title">
 
-            <span>
-                BODY CAMERA
-            </span>
+            <span>BODY CAMERA</span>
 
-            <span class="live">
-                ● LIVE
-            </span>
+            <span class="live">● LIVE</span>
 
         </div>
 
         <video
             id="camera"
             autoplay
+            muted
             playsinline>
         </video>
 
-        <div id="status">
-
-            Camera waiting...
-
+        <div
+            id="cameraStatus"
+            class="camera-status">
+            Camera not started
         </div>
 
     </div>
 
 
-    <!-- PLAYER -->
+    <div id="message" class="message">
+        Ready!
+    </div>
+
+
+    <!-- START SCREEN -->
 
     <div
-        id="player"
-        class="running">
+        id="startScreen"
+        class="start-screen">
 
-        🏃
+        <div class="start-card">
 
-    </div>
+            <h1>🏃 BODY RUNNER</h1>
 
+            <p>
+                Run, jump, crouch and move your hands
+                to control the character.
+            </p>
 
-    <!-- CONTROLS -->
+            <div class="controls-info">
 
-    <div id="controls">
+                <div class="control-box">
+                    👈<br>
+                    Move Left
+                </div>
 
-        <div class="control">
-            👈 Body/Hand Left
+                <div class="control-box">
+                    👉<br>
+                    Move Right
+                </div>
+
+                <div class="control-box">
+                    🙌<br>
+                    Jump
+                </div>
+
+                <div class="control-box">
+                    🧎<br>
+                    Crouch
+                </div>
+
+            </div>
+
+            <button
+                id="startButton"
+                class="start-button">
+                ▶ START GAME
+            </button>
+
+            <div class="fitness-message">
+                💪 Move your body to play.<br>
+                Less sitting. More movement. More fun.
+            </div>
+
         </div>
-
-        <div class="control">
-            👉 Body/Hand Right
-        </div>
-
-        <div class="control">
-            🙌 Jump
-        </div>
-
-        <div class="control">
-            👇 Crouch
-        </div>
-
-    </div>
-
-
-    <!-- START -->
-
-    <div id="startScreen">
-
-        <h2>
-            🏃 BODY RUNNER
-        </h2>
-
-        <p>
-
-            Control the runner with your
-            <strong>body and hands</strong>.
-
-            <br><br>
-
-            Move left or right to change lanes.
-            <br>
-            Jump over obstacles.
-            <br>
-            Crouch under barriers.
-
-        </p>
-
-        <button id="startButton">
-
-            START GAME 🎥
-
-        </button>
-
-    </div>
-
-
-    <!-- GAME OVER -->
-
-    <div id="gameOver">
-
-        <h2>
-            GAME OVER 💥
-        </h2>
-
-        <p>
-
-            Your score:
-            <strong>
-                <span id="finalScore">
-                    0
-                </span>
-            </strong>
-
-            <br><br>
-
-            Coins:
-            <strong>
-                <span id="finalCoins">
-                    0
-                </span>
-            </strong>
-
-        </p>
-
-        <button id="restartButton">
-
-            PLAY AGAIN 🔄
-
-        </button>
 
     </div>
 
@@ -1029,33 +405,28 @@ body {
 
 <script>
 
-/* =====================================================
-   ELEMENTS
-===================================================== */
+/* =========================================================
+   BODY RUNNER
+   Original endless runner game
+   ========================================================= */
 
-const game =
-    document.getElementById("game");
+const canvas =
+    document.getElementById("gameCanvas");
 
-const player =
-    document.getElementById("player");
+const ctx =
+    canvas.getContext("2d");
 
 const cameraVideo =
     document.getElementById("camera");
 
+const cameraStatus =
+    document.getElementById("cameraStatus");
+
 const startButton =
     document.getElementById("startButton");
 
-const restartButton =
-    document.getElementById("restartButton");
-
 const startScreen =
     document.getElementById("startScreen");
-
-const gameOverScreen =
-    document.getElementById("gameOver");
-
-const status =
-    document.getElementById("status");
 
 const scoreElement =
     document.getElementById("score");
@@ -1063,1293 +434,1700 @@ const scoreElement =
 const coinsElement =
     document.getElementById("coins");
 
-const finalScore =
-    document.getElementById("finalScore");
-
-const finalCoins =
-    document.getElementById("finalCoins");
+const messageElement =
+    document.getElementById("message");
 
 
-/* =====================================================
-   GAME VARIABLES
-===================================================== */
+/* ================= GAME STATE ================= */
+
+let W = window.innerWidth;
+let H = window.innerHeight - 72;
+
+canvas.width = W;
+canvas.height = H;
+
+window.addEventListener("resize", () => {
+
+    W = window.innerWidth;
+    H = window.innerHeight - 72;
+
+    canvas.width = W;
+    canvas.height = H;
+
+});
+
 
 let gameRunning = false;
-
-let gameOver = false;
-
-let lane = 1;
 
 let score = 0;
 
 let coins = 0;
 
-let speed = 6;
+let speed = 7;
 
-let obstacleTimer = 0;
+let distance = 0;
+
+let lastTime = 0;
+
+let spawnTimer = 0;
 
 let coinTimer = 0;
 
-let animationFrame;
+let audioStarted = false;
 
 
-/*
-    Lane positions
+/* ================= PLAYER ================= */
 
-    0 = left
-    1 = center
-    2 = right
-*/
+const player = {
 
-const lanes = [
-    "39%",
-    "50%",
-    "61%"
-];
+    lane:1,
 
+    targetLane:1,
 
-/* =====================================================
-   PLAYER MOVEMENT
-===================================================== */
+    x:0,
 
-function updatePlayerPosition() {
+    y:0,
 
-    player.style.left =
-        lanes[lane];
+    width:55,
 
-}
+    height:100,
 
+    jumpY:0,
 
-/* LEFT */
+    velocityY:0,
 
-function moveLeft() {
+    jumping:false,
 
-    if (!gameRunning)
-        return;
+    crouching:false,
 
-    if (lane > 0) {
+    frame:0
 
-        lane--;
-
-        updatePlayerPosition();
-
-    }
-
-}
+};
 
 
-/* RIGHT */
+/* ================= OBJECTS ================= */
 
-function moveRight() {
+let obstacles = [];
 
-    if (!gameRunning)
-        return;
+let coinObjects = [];
 
-    if (lane < 2) {
 
-        lane++;
+/* ================= LANES ================= */
 
-        updatePlayerPosition();
+function laneX(lane){
 
-    }
+    const center = W / 2;
+
+    const laneWidth =
+        Math.min(W * .22, 230);
+
+    return center +
+        (lane - 1) * laneWidth;
 
 }
 
 
-/* =====================================================
-   JUMP
-===================================================== */
+/* ================= CAMERA ================= */
 
-let isJumping = false;
+async function startCamera(){
 
-function jump() {
-
-    if (!gameRunning)
-        return;
-
-    if (isJumping)
-        return;
-
-    isJumping = true;
-
-    player.classList.add("jump");
-
-    setTimeout(() => {
-
-        player.classList.remove("jump");
-
-        isJumping = false;
-
-    }, 700);
-
-}
-
-
-/* =====================================================
-   CROUCH
-===================================================== */
-
-let isCrouching = false;
-
-function crouch() {
-
-    if (!gameRunning)
-        return;
-
-    if (isJumping)
-        return;
-
-    if (isCrouching)
-        return;
-
-    isCrouching = true;
-
-    player.classList.add("crouch");
-
-    setTimeout(() => {
-
-        player.classList.remove("crouch");
-
-        isCrouching = false;
-
-    }, 700);
-
-}
-
-
-/* =====================================================
-   KEYBOARD BACKUP
-===================================================== */
-
-document.addEventListener(
-    "keydown",
-    function(event) {
-
-        if (
-            event.key === "ArrowLeft" ||
-            event.key.toLowerCase() === "a"
-        ) {
-
-            moveLeft();
-
-        }
-
-        if (
-            event.key === "ArrowRight" ||
-            event.key.toLowerCase() === "d"
-        ) {
-
-            moveRight();
-
-        }
-
-        if (
-            event.key === "ArrowUp" ||
-            event.code === "Space" ||
-            event.key.toLowerCase() === "w"
-        ) {
-
-            event.preventDefault();
-
-            jump();
-
-        }
-
-        if (
-            event.key === "ArrowDown" ||
-            event.key.toLowerCase() === "s"
-        ) {
-
-            crouch();
-
-        }
-
-    }
-);
-
-
-/* =====================================================
-   SCORE
-===================================================== */
-
-let scoreInterval;
-
-function startScore() {
-
-    clearInterval(scoreInterval);
-
-    scoreInterval =
-        setInterval(() => {
-
-            if (!gameRunning)
-                return;
-
-            score++;
-
-            /*
-                Speed gradually increases
-            */
-
-            if (
-                score % 20 === 0 &&
-                speed < 14
-            ) {
-
-                speed += .5;
-
-            }
-
-            scoreElement.textContent =
-                String(score)
-                .padStart(6,"0");
-
-        }, 100);
-
-}
-
-
-/* =====================================================
-   OBSTACLE CREATION
-===================================================== */
-
-function createObstacle() {
-
-    if (!gameRunning)
-        return;
-
-    const obstacle =
-        document.createElement("div");
-
-    obstacle.className =
-        "obstacle";
-
-    obstacle.textContent =
-        "🚧";
-
-    const obstacleLane =
-        Math.floor(
-            Math.random() * 3
-        );
-
-    obstacle.dataset.lane =
-        obstacleLane;
-
-    obstacle.style.left =
-        lanes[obstacleLane];
-
-    obstacle.style.transform =
-        "translateX(-50%)";
-
-    obstacle.style.top =
-        "-80px";
-
-    game.appendChild(obstacle);
-
-    moveObstacle(obstacle);
-
-}
-
-
-/* =====================================================
-   MOVE OBSTACLE
-===================================================== */
-
-function moveObstacle(obstacle) {
-
-    let position = -80;
-
-    function frame() {
-
-        if (!gameRunning) {
-
-            return;
-
-        }
-
-        position += speed;
-
-        obstacle.style.top =
-            position + "px";
-
-
-        /*
-            Collision check
-        */
-
-        const obstacleRect =
-            obstacle.getBoundingClientRect();
-
-        const playerRect =
-            player.getBoundingClientRect();
-
-
-        const sameLane =
-            Number(
-                obstacle.dataset.lane
-            ) === lane;
-
-
-        const verticalCollision =
-            obstacleRect.bottom >
-            playerRect.top + 20 &&
-            obstacleRect.top <
-            playerRect.bottom;
-
-
-        if (
-            sameLane &&
-            verticalCollision &&
-            !isJumping
-        ) {
-
-            endGame();
-
-            return;
-
-        }
-
-
-        /*
-            Remove when off screen
-        */
-
-        if (
-            position >
-            window.innerHeight + 100
-        ) {
-
-            obstacle.remove();
-
-            return;
-
-        }
-
-
-        requestAnimationFrame(frame);
-
-    }
-
-    requestAnimationFrame(frame);
-
-}
-
-
-/* =====================================================
-   COIN CREATION
-===================================================== */
-
-function createCoin() {
-
-    if (!gameRunning)
-        return;
-
-    const coin =
-        document.createElement("div");
-
-    coin.className =
-        "coin";
-
-    coin.textContent =
-        "🪙";
-
-    const coinLane =
-        Math.floor(
-            Math.random() * 3
-        );
-
-    coin.dataset.lane =
-        coinLane;
-
-    coin.style.left =
-        lanes[coinLane];
-
-    coin.style.transform =
-        "translateX(-50%)";
-
-    coin.style.top =
-        "-60px";
-
-    game.appendChild(coin);
-
-    moveCoin(coin);
-
-}
-
-
-/* =====================================================
-   MOVE COIN
-===================================================== */
-
-function moveCoin(coin) {
-
-    let position = -60;
-
-    function frame() {
-
-        if (!gameRunning)
-            return;
-
-        position += speed;
-
-        coin.style.top =
-            position + "px";
-
-
-        const coinRect =
-            coin.getBoundingClientRect();
-
-        const playerRect =
-            player.getBoundingClientRect();
-
-
-        const sameLane =
-            Number(
-                coin.dataset.lane
-            ) === lane;
-
-
-        const collected =
-            coinRect.bottom >
-            playerRect.top &&
-            coinRect.top <
-            playerRect.bottom;
-
-
-        if (
-            sameLane &&
-            collected
-        ) {
-
-            coins++;
-
-            coinsElement.textContent =
-                coins;
-
-            coin.remove();
-
-            return;
-
-        }
-
-
-        if (
-            position >
-            window.innerHeight + 100
-        ) {
-
-            coin.remove();
-
-            return;
-
-        }
-
-
-        requestAnimationFrame(frame);
-
-    }
-
-    requestAnimationFrame(frame);
-
-}
-
-
-/* =====================================================
-   SPAWN LOOP
-===================================================== */
-
-function spawnLoop() {
-
-    if (!gameRunning)
-        return;
-
-
-    obstacleTimer++;
-
-    coinTimer++;
-
-
-    /*
-        Obstacles
-    */
-
-    if (
-        obstacleTimer >
-        Math.max(
-            45,
-            100 - speed * 4
-        )
-    ) {
-
-        createObstacle();
-
-        obstacleTimer = 0;
-
-    }
-
-
-    /*
-        Coins
-    */
-
-    if (
-        coinTimer > 55
-    ) {
-
-        createCoin();
-
-        coinTimer = 0;
-
-    }
-
-
-    requestAnimationFrame(
-        spawnLoop
-    );
-
-}
-
-
-/* =====================================================
-   START GAME
-===================================================== */
-
-async function startGame() {
-
-    /*
-        IMPORTANT:
-        Hide the large start screen
-        immediately.
-    */
-
-    startScreen.style.display =
-        "none";
-
-    gameOverScreen.style.display =
-        "none";
-
-
-    gameRunning = true;
-
-    gameOver = false;
-
-    score = 0;
-
-    coins = 0;
-
-    lane = 1;
-
-    speed = 6;
-
-    obstacleTimer = 0;
-
-    coinTimer = 0;
-
-
-    scoreElement.textContent =
-        "000000";
-
-    coinsElement.textContent =
-        "0";
-
-
-    updatePlayerPosition();
-
-
-    try {
-
-        status.textContent =
-            "Starting camera...";
-
+    try{
 
         const stream =
-            await navigator.mediaDevices
-                .getUserMedia({
+            await navigator.mediaDevices.getUserMedia({
 
-                    video: {
+                video:{
+                    width:640,
+                    height:480,
+                    facingMode:"user"
+                },
 
-                        width: 1280,
+                audio:false
 
-                        height: 720,
+            });
 
-                        facingMode: "user"
+        cameraVideo.srcObject = stream;
 
-                    },
+        cameraStatus.innerHTML =
+            "Camera is working! 🎥<br>Move your body or hands.";
 
-                    audio: false
+        initializePose();
 
-                });
-
-
-        cameraVideo.srcObject =
-            stream;
-
-
-        await cameraVideo.play();
-
-
-        status.innerHTML =
-            "Camera is working! 🎥<br>" +
-            "Move your body or hands.";
-
-
-        /*
-            Start computer vision
-        */
-
-        startPoseTracking();
-
-        startHandTracking();
-
+        initializeHands();
 
     }
-    catch(error) {
+
+    catch(error){
 
         console.error(error);
 
-        status.innerHTML =
-            "Camera unavailable.<br>" +
-            "Keyboard controls are active.";
+        cameraStatus.textContent =
+            "Camera unavailable. Keyboard controls still work.";
 
     }
-
-
-    startScore();
-
-    spawnLoop();
 
 }
 
 
-/* =====================================================
-   END GAME
-===================================================== */
+/* ================= AUDIO ================= */
 
-function endGame() {
+let audioContext;
 
-    if (gameOver)
-        return;
+function initAudio(){
 
-    gameRunning = false;
+    if(audioStarted) return;
 
-    gameOver = true;
+    audioStarted = true;
 
-    clearInterval(
-        scoreInterval
+    audioContext =
+        new (window.AudioContext ||
+        window.webkitAudioContext)();
+
+}
+
+
+function sound(
+    frequency,
+    duration,
+    type="sine",
+    volume=.08
+){
+
+    if(!audioContext) return;
+
+    const oscillator =
+        audioContext.createOscillator();
+
+    const gain =
+        audioContext.createGain();
+
+    oscillator.type = type;
+
+    oscillator.frequency.value =
+        frequency;
+
+    gain.gain.setValueAtTime(
+        volume,
+        audioContext.currentTime
     );
 
+    gain.gain.exponentialRampToValueAtTime(
+        .001,
+        audioContext.currentTime + duration
+    );
 
-    finalScore.textContent =
-        score;
+    oscillator.connect(gain);
 
-    finalCoins.textContent =
-        coins;
+    gain.connect(audioContext.destination);
 
+    oscillator.start();
 
-    gameOverScreen.style.display =
-        "block";
-
-
-    /*
-        Stop camera
-        only after game ends
-    */
+    oscillator.stop(
+        audioContext.currentTime + duration
+    );
 
 }
 
 
-/* =====================================================
-   RESTART
-===================================================== */
+function jumpSound(){
 
-restartButton.addEventListener(
-    "click",
-    function() {
+    sound(420,.08,"square",.06);
 
-        /*
-            Remove old objects
-        */
+    setTimeout(() => {
+        sound(650,.13,"square",.05);
+    },70);
 
-        document
-            .querySelectorAll(
-                ".obstacle,.coin"
-            )
-            .forEach(
-                element =>
-                    element.remove()
-            );
+}
 
 
-        player.classList.remove(
-            "jump",
-            "crouch"
-        );
+function coinSound(){
+
+    sound(700,.06,"sine",.06);
+
+    setTimeout(() => {
+        sound(1000,.08,"sine",.05);
+    },50);
+
+}
 
 
-        isJumping = false;
+function crashSound(){
 
-        isCrouching = false;
+    sound(110,.25,"sawtooth",.09);
+
+    setTimeout(() => {
+        sound(65,.35,"sawtooth",.07);
+    },120);
+
+}
 
 
-        startGame();
+/* ================= MESSAGE ================= */
+
+function showMessage(text){
+
+    messageElement.textContent = text;
+
+    messageElement.style.opacity = "1";
+
+    setTimeout(() => {
+
+        messageElement.style.opacity = "0";
+
+    },1200);
+
+}
+
+
+/* ================= PLAYER MOVEMENT ================= */
+
+function moveLeft(){
+
+    if(!gameRunning) return;
+
+    if(player.targetLane > 0){
+
+        player.targetLane--;
+
+        sound(300,.05,"square",.03);
 
     }
-);
+
+}
 
 
-/* =====================================================
-   START BUTTON
-===================================================== */
+function moveRight(){
 
-startButton.addEventListener(
-    "click",
-    startGame
-);
+    if(!gameRunning) return;
+
+    if(player.targetLane < 2){
+
+        player.targetLane++;
+
+        sound(350,.05,"square",.03);
+
+    }
+
+}
 
 
-/* =====================================================
-   POSE TRACKING
-===================================================== */
+function jump(){
 
-let pose;
+    if(!gameRunning) return;
 
-let previousBodyX = null;
+    if(!player.jumping){
+
+        player.jumping = true;
+
+        player.velocityY = 19;
+
+        jumpSound();
+
+    }
+
+}
+
+
+function crouch(){
+
+    if(!gameRunning) return;
+
+    player.crouching = true;
+
+    setTimeout(() => {
+
+        player.crouching = false;
+
+    },600);
+
+}
+
+
+/* ================= KEYBOARD ================= */
+
+document.addEventListener("keydown", e => {
+
+    if(e.key === "ArrowLeft" || e.key.toLowerCase()==="a"){
+        moveLeft();
+    }
+
+    if(e.key === "ArrowRight" || e.key.toLowerCase()==="d"){
+        moveRight();
+    }
+
+    if(e.key === "ArrowUp" ||
+       e.key === " " ||
+       e.key.toLowerCase()==="w"){
+
+        jump();
+
+    }
+
+    if(e.key === "ArrowDown" ||
+       e.key.toLowerCase()==="s"){
+
+        crouch();
+
+    }
+
+});
+
+
+/* =========================================================
+   MEDIAPIPE POSE
+   ========================================================= */
+
+let poseDetector;
+
+let previousPoseX = null;
 
 let previousHipY = null;
 
-let bodyCooldown = 0;
+let poseCooldown = 0;
 
-let jumpCooldown = 0;
+function initializePose(){
 
+    if(typeof Pose === "undefined"){
 
-/* Create Pose */
+        console.log("Pose library unavailable");
 
-function startPoseTracking() {
-
-    if (pose)
         return;
 
+    }
 
-    pose =
+    poseDetector =
         new Pose({
 
-            locateFile:
-            function(file) {
+            locateFile:(file)=>{
 
-                return (
-                    "https://cdn.jsdelivr.net/npm/" +
-                    "@mediapipe/pose/" +
-                    file
-                );
+                return
+                `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
 
             }
 
         });
 
+    poseDetector.setOptions({
 
-    pose.setOptions({
+        modelComplexity:1,
 
-        modelComplexity: 1,
+        smoothLandmarks:true,
 
-        smoothLandmarks: true,
+        enableSegmentation:false,
 
-        enableSegmentation: false,
+        minDetectionConfidence:.55,
 
-        minDetectionConfidence: .55,
-
-        minTrackingConfidence: .55
+        minTrackingConfidence:.55
 
     });
 
 
-    pose.onResults(
-        processPose
-    );
+    poseDetector.onResults(results => {
+
+        if(!results.poseLandmarks) return;
+
+        const lm =
+            results.poseLandmarks;
 
 
-    /*
-        Camera processing loop
-    */
+        const leftShoulder =
+            lm[11];
 
-    async function processFrame() {
+        const rightShoulder =
+            lm[12];
 
-        if (
-            cameraVideo.readyState >= 2
-        ) {
+        const leftHip =
+            lm[23];
 
-            try {
+        const rightHip =
+            lm[24];
 
-                await pose.send({
-                    image: cameraVideo
-                });
+
+        if(!leftShoulder ||
+           !rightShoulder ||
+           !leftHip ||
+           !rightHip){
+
+            return;
+
+        }
+
+
+        /* ================= BODY LEFT/RIGHT ================= */
+
+        const bodyX =
+            (leftShoulder.x +
+             rightShoulder.x) / 2;
+
+
+        if(previousPoseX !== null){
+
+            const dx =
+                bodyX - previousPoseX;
+
+
+            if(poseCooldown <= 0){
+
+                if(dx > .075){
+
+                    moveRight();
+
+                    poseCooldown = 15;
+
+                }
+
+                else if(dx < -.075){
+
+                    moveLeft();
+
+                    poseCooldown = 15;
+
+                }
 
             }
-            catch(error) {
 
-                console.log(
-                    "Pose:",
-                    error
-                );
+        }
+
+
+        previousPoseX = bodyX;
+
+
+        /* ================= JUMP DETECTION ================= */
+
+        const hipY =
+            (leftHip.y +
+             rightHip.y) / 2;
+
+
+        if(previousHipY !== null){
+
+            const movement =
+                previousHipY - hipY;
+
+
+            if(movement > .055){
+
+                jump();
 
             }
 
         }
 
 
-        if (gameRunning) {
+        previousHipY = hipY;
 
-            requestAnimationFrame(
-                processFrame
-            );
+
+    });
+
+
+    /* Process camera frames */
+
+    async function processPose(){
+
+        if(cameraVideo.readyState >= 2){
+
+            await poseDetector.send({
+                image:cameraVideo
+            });
 
         }
 
+        requestAnimationFrame(processPose);
+
     }
 
-
-    processFrame();
+    processPose();
 
 }
 
 
-/* =====================================================
-   PROCESS BODY
-===================================================== */
-
-function processPose(results) {
-
-    if (!results.poseLandmarks)
-        return;
-
-
-    const landmarks =
-        results.poseLandmarks;
-
-
-    const leftShoulder =
-        landmarks[11];
-
-    const rightShoulder =
-        landmarks[12];
-
-    const leftHip =
-        landmarks[23];
-
-    const rightHip =
-        landmarks[24];
-
-
-    if (
-        !leftShoulder ||
-        !rightShoulder ||
-        !leftHip ||
-        !rightHip
-    ) {
-
-        return;
-
-    }
-
-
-    /*
-        BODY CENTER
-    */
-
-    const bodyX =
-        (
-            leftShoulder.x +
-            rightShoulder.x
-        ) / 2;
-
-
-    /*
-        BODY LEFT / RIGHT
-    */
-
-    if (
-        previousBodyX !== null &&
-        bodyCooldown <= 0
-    ) {
-
-        const movement =
-            bodyX -
-            previousBodyX;
-
-
-        /*
-            Move LEFT
-
-            Camera is mirrored visually,
-            so the threshold is intentionally
-            inverted.
-        */
-
-        if (
-            movement < -.045
-        ) {
-
-            moveRight();
-
-            bodyCooldown = 12;
-
-        }
-
-
-        /*
-            Move RIGHT
-        */
-
-        else if (
-            movement > .045
-        ) {
-
-            moveLeft();
-
-            bodyCooldown = 12;
-
-        }
-
-    }
-
-
-    if (bodyCooldown > 0)
-        bodyCooldown--;
-
-
-    previousBodyX =
-        bodyX;
-
-
-    /*
-        HIP POSITION
-    */
-
-    const hipY =
-        (
-            leftHip.y +
-            rightHip.y
-        ) / 2;
-
-
-    /*
-        JUMP DETECTION
-
-        Sudden upward hip movement.
-    */
-
-    if (
-        previousHipY !== null &&
-        jumpCooldown <= 0
-    ) {
-
-        const verticalMovement =
-            previousHipY -
-            hipY;
-
-
-        if (
-            verticalMovement > .035
-        ) {
-
-            jump();
-
-            jumpCooldown = 20;
-
-        }
-
-    }
-
-
-    /*
-        CROUCH DETECTION
-
-        Hip moving down.
-    */
-
-    if (
-        previousHipY !== null &&
-        !isJumping &&
-        verticalMovementSafe(
-            hipY,
-            previousHipY
-        )
-    ) {
-
-        const downMovement =
-            hipY -
-            previousHipY;
-
-
-        if (
-            downMovement > .025
-        ) {
-
-            crouch();
-
-        }
-
-    }
-
-
-    if (jumpCooldown > 0)
-        jumpCooldown--;
-
-
-    previousHipY =
-        hipY;
-
-}
-
-
-/*
-    Small helper
-*/
-
-function verticalMovementSafe(
-    current,
-    previous
-) {
-
-    return (
-        current !== undefined &&
-        previous !== undefined
-    );
-
-}
-
-
-/* =====================================================
-   HAND TRACKING
-===================================================== */
-
-let hands;
+/* =========================================================
+   MEDIAPIPE HANDS
+   ========================================================= */
+
+let handsDetector;
 
 let previousHandX = null;
 
 let handCooldown = 0;
 
-let handJumpCooldown = 0;
+function initializeHands(){
 
+    if(typeof Hands === "undefined"){
 
-/* Start hands */
+        console.log("Hands library unavailable");
 
-function startHandTracking() {
-
-    if (hands)
         return;
 
+    }
 
-    hands =
+
+    handsDetector =
         new Hands({
 
-            locateFile:
-            function(file) {
+            locateFile:(file)=>{
 
-                return (
-                    "https://cdn.jsdelivr.net/npm/" +
-                    "@mediapipe/hands/" +
-                    file
-                );
+                return
+                `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
 
             }
 
         });
 
 
-    hands.setOptions({
+    handsDetector.setOptions({
 
-        maxNumHands: 2,
+        maxNumHands:2,
 
-        modelComplexity: 1,
+        modelComplexity:1,
 
-        minDetectionConfidence: .55,
+        minDetectionConfidence:.55,
 
-        minTrackingConfidence: .55
+        minTrackingConfidence:.55
 
     });
 
 
-    hands.onResults(
-        processHands
+    handsDetector.onResults(results => {
+
+        if(!results.multiHandLandmarks ||
+           results.multiHandLandmarks.length===0){
+
+            return;
+
+        }
+
+
+        const hand =
+            results.multiHandLandmarks[0];
+
+
+        const wrist =
+            hand[0];
+
+
+        if(!wrist) return;
+
+
+        const x = wrist.x;
+
+        const y = wrist.y;
+
+
+        /* ================= HAND LEFT/RIGHT ================= */
+
+        if(previousHandX !== null &&
+           handCooldown <= 0){
+
+            const dx =
+                x - previousHandX;
+
+
+            if(dx > .12){
+
+                moveRight();
+
+                handCooldown = 18;
+
+            }
+
+            else if(dx < -.12){
+
+                moveLeft();
+
+                handCooldown = 18;
+
+            }
+
+        }
+
+
+        previousHandX = x;
+
+
+        /* ================= HAND ABOVE HEAD = JUMP ================= */
+
+        if(y < .22){
+
+            jump();
+
+        }
+
+    });
+
+
+    async function processHands(){
+
+        if(cameraVideo.readyState >= 2){
+
+            await handsDetector.send({
+                image:cameraVideo
+            });
+
+        }
+
+        requestAnimationFrame(processHands);
+
+    }
+
+    processHands();
+
+}
+
+
+/* ================= OBJECT CREATION ================= */
+
+function createObstacle(){
+
+    const lane =
+        Math.floor(Math.random()*3);
+
+    const type =
+        Math.random() > .7
+        ? "barrier"
+        : "block";
+
+
+    obstacles.push({
+
+        lane:lane,
+
+        z:1,
+
+        type:type,
+
+        width:80,
+
+        height:type==="barrier"?45:75
+
+    });
+
+}
+
+
+function createCoin(){
+
+    const lane =
+        Math.floor(Math.random()*3);
+
+    coinObjects.push({
+
+        lane:lane,
+
+        z:1,
+
+        collected:false
+
+    });
+
+}
+
+
+/* ================= DRAW SKY ================= */
+
+function drawBackground(){
+
+    const sky =
+        ctx.createLinearGradient(
+            0,0,0,H*.55
+        );
+
+    sky.addColorStop(0,"#43c6ef");
+
+    sky.addColorStop(1,"#c8f4ff");
+
+    ctx.fillStyle=sky;
+
+    ctx.fillRect(0,0,W,H);
+
+
+    /* Sun */
+
+    ctx.fillStyle="#fff3a3";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        W*.78,
+        H*.18,
+        65,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* Clouds */
+
+    drawCloud(W*.16,H*.16,1);
+
+    drawCloud(W*.78,H*.12,.75);
+
+
+    /* Grass */
+
+    ctx.fillStyle="#55a84f";
+
+    ctx.fillRect(
+        0,
+        H*.43,
+        W,
+        H*.57
+    );
+
+}
+
+
+/* ================= CLOUD ================= */
+
+function drawCloud(x,y,s){
+
+    ctx.fillStyle="rgba(255,255,255,.9)";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x,
+        y,
+        35*s,
+        0,
+        Math.PI*2
+    );
+
+    ctx.arc(
+        x+40*s,
+        y-15*s,
+        45*s,
+        0,
+        Math.PI*2
+    );
+
+    ctx.arc(
+        x+85*s,
+        y,
+        32*s,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+}
+
+
+/* ================= ROAD ================= */
+
+function drawRoad(){
+
+    const horizonY =
+        H*.40;
+
+    const bottomY =
+        H;
+
+    const roadTopWidth =
+        W*.20;
+
+    const roadBottomWidth =
+        W*.82;
+
+
+    ctx.fillStyle="#1a2431";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        W/2-roadTopWidth/2,
+        horizonY
+    );
+
+    ctx.lineTo(
+        W/2+roadTopWidth/2,
+        horizonY
+    );
+
+    ctx.lineTo(
+        W/2+roadBottomWidth/2,
+        bottomY
+    );
+
+    ctx.lineTo(
+        W/2-roadBottomWidth/2,
+        bottomY
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* Road edges */
+
+    ctx.strokeStyle="#e9eef2";
+
+    ctx.lineWidth=8;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        W/2-roadTopWidth/2,
+        horizonY
+    );
+
+    ctx.lineTo(
+        W/2-roadBottomWidth/2,
+        bottomY
+    );
+
+    ctx.moveTo(
+        W/2+roadTopWidth/2,
+        horizonY
+    );
+
+    ctx.lineTo(
+        W/2+roadBottomWidth/2,
+        bottomY
+    );
+
+    ctx.stroke();
+
+
+    /* Lane markings */
+
+    for(let lane=1;lane<=2;lane++){
+
+        const topX =
+            W/2 +
+            (lane-1.5) *
+            roadTopWidth/3;
+
+        const bottomX =
+            W/2 +
+            (lane-1.5) *
+            roadBottomWidth/3;
+
+
+        ctx.strokeStyle="rgba(255,255,255,.45)";
+
+        ctx.lineWidth=5;
+
+        ctx.setLineDash([35,35]);
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            topX,
+            horizonY
+        );
+
+        ctx.lineTo(
+            bottomX,
+            bottomY
+        );
+
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+
+    }
+
+}
+
+
+/* ================= TREES ================= */
+
+function drawTrees(){
+
+    const horizon =
+        H*.41;
+
+    for(let i=0;i<7;i++){
+
+        const side =
+            i%2===0 ? -1 : 1;
+
+        const x =
+            W/2 +
+            side *
+            (W*.42 + i*55);
+
+        const y =
+            horizon +
+            i*35;
+
+        const size =
+            35+i*8;
+
+
+        ctx.fillStyle="#633c25";
+
+        ctx.fillRect(
+            x-6,
+            y,
+            12,
+            size
+        );
+
+
+        ctx.fillStyle="#27733d";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x,
+            y-15,
+            size,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    }
+
+}
+
+
+/* ================= CHARACTER ================= */
+
+function drawPlayer(){
+
+    const targetX =
+        laneX(player.targetLane);
+
+    player.x +=
+        (targetX-player.x)*.18;
+
+
+    const baseY =
+        H*.79;
+
+    const jumpOffset =
+        player.jumpY;
+
+
+    const x =
+        player.x;
+
+    const y =
+        baseY-jumpOffset;
+
+
+    ctx.save();
+
+    ctx.translate(x,y);
+
+
+    /* Shadow */
+
+    ctx.fillStyle="rgba(0,0,0,.28)";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        0,
+        50+jumpOffset*.2,
+        34,
+        9,
+        0,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* Character body */
+
+    const crouch =
+        player.crouching;
+
+
+    const bodyY =
+        crouch ? 10 : -15;
+
+
+    /* Legs */
+
+    ctx.strokeStyle="#17202c";
+
+    ctx.lineWidth=12;
+
+    ctx.lineCap="round";
+
+
+    if(!crouch){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            -8,
+            15
+        );
+
+        ctx.lineTo(
+            -22,
+            52
+        );
+
+        ctx.moveTo(
+            8,
+            15
+        );
+
+        ctx.lineTo(
+            25,
+            48
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    /* Shoes */
+
+    ctx.strokeStyle="#f7d046";
+
+    ctx.lineWidth=9;
+
+    ctx.beginPath();
+
+    ctx.moveTo(-22,52);
+
+    ctx.lineTo(-34,52);
+
+    ctx.moveTo(25,48);
+
+    ctx.lineTo(37,48);
+
+    ctx.stroke();
+
+
+    /* Body */
+
+    ctx.fillStyle="#ff6b35";
+
+    ctx.beginPath();
+
+    ctx.roundRect(
+        -20,
+        bodyY,
+        40,
+        55,
+        12
+    );
+
+    ctx.fill();
+
+
+    /* Arms */
+
+    ctx.strokeStyle="#ffb53d";
+
+    ctx.lineWidth=11;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        -17,
+        bodyY+12
+    );
+
+    ctx.lineTo(
+        -38,
+        bodyY+35
+    );
+
+    ctx.moveTo(
+        17,
+        bodyY+12
+    );
+
+    ctx.lineTo(
+        39,
+        bodyY+25
+    );
+
+    ctx.stroke();
+
+
+    /* Head */
+
+    ctx.fillStyle="#ffbd62";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        bodyY-17,
+        20,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* Hair */
+
+    ctx.fillStyle="#26303c";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        bodyY-23,
+        20,
+        Math.PI,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* Face */
+
+    ctx.fillStyle="#17202c";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        7,
+        bodyY-18,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.restore();
+
+}
+
+
+/* ================= DRAW OBSTACLES ================= */
+
+function drawObstacle(obj){
+
+    const depth =
+        1-obj.z;
+
+    const scale =
+        .35 + depth*1.35;
+
+
+    const x =
+        laneX(obj.lane);
+
+    const y =
+        H*.40 +
+        depth*H*.43;
+
+
+    const width =
+        obj.width*scale;
+
+    const height =
+        obj.height*scale;
+
+
+    ctx.save();
+
+    ctx.translate(x,y);
+
+
+    if(obj.type==="barrier"){
+
+        ctx.fillStyle="#f3b31b";
+
+        ctx.fillRect(
+            -width/2,
+            -height,
+            width,
+            height
+        );
+
+
+        ctx.fillStyle="#202938";
+
+        for(let i=-2;i<3;i++){
+
+            ctx.save();
+
+            ctx.translate(i*20*scale,0);
+
+            ctx.rotate(-.55);
+
+            ctx.fillRect(
+                -6*scale,
+                -height,
+                12*scale,
+                height
+            );
+
+            ctx.restore();
+
+        }
+
+    }
+
+    else{
+
+        ctx.fillStyle="#e34d4d";
+
+        ctx.fillRect(
+            -width/2,
+            -height,
+            width,
+            height
+        );
+
+
+        ctx.fillStyle="#fff";
+
+        ctx.fillRect(
+            -width*.38,
+            -height*.65,
+            width*.76,
+            8*scale
+        );
+
+    }
+
+
+    ctx.restore();
+
+}
+
+
+/* ================= DRAW COIN ================= */
+
+function drawCoin(obj){
+
+    const depth =
+        1-obj.z;
+
+    const scale =
+        .35+depth*1.4;
+
+
+    const x =
+        laneX(obj.lane);
+
+    const y =
+        H*.43+
+        depth*H*.40;
+
+
+    ctx.save();
+
+    ctx.translate(x,y);
+
+    ctx.scale(scale,scale);
+
+
+    ctx.fillStyle="#ffd23f";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        -30,
+        17,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.strokeStyle="#fff0a0";
+
+    ctx.lineWidth=4;
+
+    ctx.stroke();
+
+
+    ctx.fillStyle="#a76b00";
+
+    ctx.font="bold 18px Arial";
+
+    ctx.textAlign="center";
+
+    ctx.fillText(
+        "$",
+        0,
+        -24
     );
 
 
-    async function processHandFrame() {
-
-        if (
-            cameraVideo.readyState >= 2
-        ) {
-
-            try {
-
-                await hands.send({
-                    image: cameraVideo
-                });
-
-            }
-            catch(error) {
-
-                console.log(
-                    "Hands:",
-                    error
-                );
-
-            }
-
-        }
-
-
-        if (gameRunning) {
-
-            requestAnimationFrame(
-                processHandFrame
-            );
-
-        }
-
-    }
-
-
-    processHandFrame();
+    ctx.restore();
 
 }
 
 
-/* =====================================================
-   PROCESS HAND
-===================================================== */
+/* ================= COLLISION ================= */
 
-function processHands(results) {
+function checkCollisions(){
 
-    if (
-        !results.multiHandLandmarks ||
-        results.multiHandLandmarks.length === 0
-    ) {
-
-        return;
-
-    }
+    const playerLane =
+        Math.round(
+            player.targetLane
+        );
 
 
-    const hand =
-        results.multiHandLandmarks[0];
+    obstacles.forEach(obj => {
+
+        if(obj.lane !== playerLane)
+            return;
 
 
-    const wrist =
-        hand[0];
+        if(obj.z < .17 &&
+           obj.z > -.03){
 
-    const indexFinger =
-        hand[8];
+            const jumpingHigh =
+                player.jumpY > 90;
 
-
-    if (
-        !wrist ||
-        !indexFinger
-    ) {
-
-        return;
-
-    }
+            if(jumpingHigh)
+                return;
 
 
-    /*
-        HAND CENTER
-    */
-
-    const handX =
-        (
-            wrist.x +
-            indexFinger.x
-        ) / 2;
+            if(
+                obj.type==="barrier" &&
+                player.crouching
+            )
+                return;
 
 
-    /*
-        HAND LEFT / RIGHT
-    */
+            crashSound();
 
-    if (
-        previousHandX !== null &&
-        handCooldown <= 0
-    ) {
-
-        const movement =
-            handX -
-            previousHandX;
-
-
-        /*
-            Hand moves visually LEFT
-        */
-
-        if (
-            movement < -.07
-        ) {
-
-            moveRight();
-
-            handCooldown = 14;
+            gameOver();
 
         }
 
+    });
 
-        /*
-            Hand moves visually RIGHT
-        */
 
-        else if (
-            movement > .07
-        ) {
+    coinObjects.forEach(obj => {
 
-            moveLeft();
+        if(obj.collected)
+            return;
 
-            handCooldown = 14;
+
+        if(
+            obj.lane===playerLane &&
+            obj.z < .13 &&
+            obj.z > -.04
+        ){
+
+            obj.collected=true;
+
+            coins++;
+
+            score+=50;
+
+            coinsElement.textContent =
+                coins;
+
+            scoreElement.textContent =
+                score;
+
+            coinSound();
+
+            showMessage("🪙 +50");
+
+        }
+
+    });
+
+}
+
+
+/* ================= GAME OVER ================= */
+
+function gameOver(){
+
+    gameRunning=false;
+
+    showMessage(
+        "💥 Game Over — Press START to run again"
+    );
+
+    startButton.textContent =
+        "▶ PLAY AGAIN";
+
+    startScreen.style.display =
+        "flex";
+
+}
+
+
+/* ================= UPDATE ================= */
+
+function update(delta){
+
+    if(!gameRunning)
+        return;
+
+
+    /* Player lane */
+
+    player.lane +=
+        (player.targetLane-player.lane)*.15;
+
+
+    /* Jump */
+
+    if(player.jumping){
+
+        player.jumpY +=
+            player.velocityY;
+
+        player.velocityY -=
+            1.1;
+
+
+        if(player.jumpY<=0){
+
+            player.jumpY=0;
+
+            player.velocityY=0;
+
+            player.jumping=false;
 
         }
 
     }
 
 
-    if (handCooldown > 0)
+    /* Speed */
+
+    speed +=
+        delta*.00035;
+
+    speed =
+        Math.min(speed,16);
+
+
+    /* Distance */
+
+    distance += speed;
+
+
+    if(distance % 10 < 1){
+
+        score++;
+
+        scoreElement.textContent =
+            score;
+
+    }
+
+
+    /* Obstacles */
+
+    spawnTimer += delta;
+
+    if(spawnTimer > Math.max(550,1000-speed*25)){
+
+        createObstacle();
+
+        spawnTimer=0;
+
+    }
+
+
+    /* Coins */
+
+    coinTimer += delta;
+
+    if(coinTimer > 700){
+
+        createCoin();
+
+        coinTimer=0;
+
+    }
+
+
+    /* Move obstacles */
+
+    obstacles.forEach(obj => {
+
+        obj.z -=
+            .0035 * speed;
+
+    });
+
+
+    coinObjects.forEach(obj => {
+
+        obj.z -=
+            .0035 * speed;
+
+    });
+
+
+    obstacles =
+        obstacles.filter(
+            obj => obj.z > -.2
+        );
+
+
+    coinObjects =
+        coinObjects.filter(
+            obj => obj.z > -.2 &&
+                   !obj.collected
+        );
+
+
+    checkCollisions();
+
+
+    if(poseCooldown>0)
+        poseCooldown--;
+
+    if(handCooldown>0)
         handCooldown--;
 
-
-    previousHandX =
-        handX;
+}
 
 
-    /*
-        HAND RAISED = JUMP
+/* ================= DRAW ================= */
 
-        Wrist close to top of camera.
-    */
+function draw(){
 
-    if (
-        wrist.y < .22 &&
-        handJumpCooldown <= 0
-    ) {
-
-        jump();
-
-        handJumpCooldown = 25;
-
-    }
+    ctx.clearRect(
+        0,
+        0,
+        W,
+        H
+    );
 
 
-    if (
-        handJumpCooldown > 0
-    ) {
+    drawBackground();
 
-        handJumpCooldown--;
+    drawTrees();
 
-    }
+    drawRoad();
+
+
+    /* Objects */
+
+    const objects =
+        [
+            ...obstacles.map(
+                o=>({type:"obstacle",data:o})
+            ),
+
+            ...coinObjects.map(
+                o=>({type:"coin",data:o})
+            )
+        ]
+        .sort(
+            (a,b)=>
+            b.data.z-a.data.z
+        );
+
+
+    objects.forEach(item => {
+
+        if(item.type==="obstacle")
+            drawObstacle(item.data);
+
+        else
+            drawCoin(item.data);
+
+    });
+
+
+    drawPlayer();
 
 }
 
 
-/* =====================================================
-   INITIAL POSITION
-===================================================== */
+/* ================= GAME LOOP ================= */
 
-updatePlayerPosition();
+function gameLoop(timestamp){
+
+    const delta =
+        timestamp-lastTime;
+
+    lastTime=timestamp;
+
+    update(delta);
+
+    draw();
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+/* ================= START GAME ================= */
+
+startButton.addEventListener(
+    "click",
+    async () => {
+
+        initAudio();
+
+        await startCamera();
+
+        score=0;
+
+        coins=0;
+
+        speed=7;
+
+        distance=0;
+
+        obstacles=[];
+
+        coinObjects=[];
+
+        player.targetLane=1;
+
+        player.lane=1;
+
+        player.jumpY=0;
+
+        player.jumping=false;
+
+        player.crouching=false;
+
+        scoreElement.textContent=0;
+
+        coinsElement.textContent=0;
+
+        gameRunning=true;
+
+        startScreen.style.display="none";
+
+        showMessage(
+            "🏃 RUN! Move your body!"
+        );
+
+    }
+);
+
+
+/* ================= INITIAL DRAW ================= */
+
+player.x =
+    laneX(1);
+
+draw();
+
+requestAnimationFrame(
+    gameLoop
+);
 
 </script>
 
